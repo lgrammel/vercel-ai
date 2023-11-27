@@ -1,9 +1,19 @@
 'use client';
 
 import { useChat } from 'ai/react';
+import { useState } from 'react';
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit, data } = useChat();
+  const [chatId, setChatId] = useState<number | undefined>(undefined);
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    id: chatId?.toString(),
+  });
+
+  // Function for handling the reset action
+  const handleReset = () => {
+    setChatId(chatId => (chatId ?? 0) + 1);
+  };
+
   return (
     <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
       {messages.length > 0
@@ -22,6 +32,14 @@ export default function Chat() {
           placeholder="Say something..."
           onChange={handleInputChange}
         />
+        <button
+          type="button"
+          className="fixed bottom-0 w-20 p-2 mb-8 text-white bg-blue-500 rounded hover:bg-blue-700"
+          onClick={handleReset}
+          style={{ transform: 'translateY(100%)' }}
+        >
+          Reset
+        </button>
       </form>
     </div>
   );
