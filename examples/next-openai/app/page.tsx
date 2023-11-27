@@ -9,7 +9,6 @@ export default function Chat() {
     id: chatId?.toString(),
   });
 
-  // Function for handling the reset action
   const handleReset = () => {
     setChatId(chatId => (chatId ?? 0) + 1);
   };
