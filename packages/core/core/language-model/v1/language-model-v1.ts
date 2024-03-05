@@ -188,22 +188,18 @@ type LanguageModelCallOptions = {
   maxCompletionTokens: number;
 
   /**
-   * Randomness setting. This is a number between 0 (almost no randomness) and
+   * Temperature setting. This is a number between 0 (almost no randomness) and
    * 1 (very random).
    *
-   * This is usually mapped to the temperature, but it uses
-   * a standardized scale. Different LLM providers have different temperature
+   * Different LLM providers have different temperature
    * scales, so they'd need to map it (without mapping, the same temperature has
    * different effects on different models). The provider can also chose to map
    * this to topP, potentially even using a custom setting on their model.
    *
    * Note: This is an example of a setting that requires a clear specification of
    * the semantics.
-   *
-   * Alternative name: temperature (but I'd like to standardize here, users only
-   * care about the effect, not the name of the setting)
    */
-  randomness: number;
+  temperature: number;
 
   /**
    * Presence penalty setting. This is a number between 0 (no penalty)
