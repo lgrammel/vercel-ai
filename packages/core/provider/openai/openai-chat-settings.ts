@@ -1,4 +1,4 @@
-import { LanguageModelSettings, ObjectMode } from '../../core';
+import { ObjectMode } from '../../core';
 
 // https://platform.openai.com/docs/models
 export type OpenAIChatModelId =
@@ -21,21 +21,13 @@ export type OpenAIChatModelId =
   | 'gpt-3.5-turbo-16k-0613'
   | (string & {});
 
-export interface OpenAIChatSettings extends LanguageModelSettings {
+export interface OpenAIChatSettings {
   objectMode?: ObjectMode;
 
   /**
    * The ID of the model to use.
    */
   id: OpenAIChatModelId;
-
-  /**
-   * `temperature`: Controls the randomness and creativity in the model's responses.
-   * A lower temperature (close to 0) results in more predictable, conservative text, while a higher temperature (close to 1) produces more varied and creative output.
-   * Adjust this to balance between consistency and creativity in the model's replies.
-   * Example: temperature: 0.5
-   */
-  temperature?: number;
 
   /**
    *  This parameter sets a threshold for token selection based on probability.
@@ -53,22 +45,6 @@ export interface OpenAIChatSettings extends LanguageModelSettings {
    * Example: seed: 89 (or) seed: null
    */
   seed?: number | null;
-
-  /**
-   * Discourages the model from repeating the same information or context already mentioned in the conversation or prompt.
-   * Increasing this value encourages the model to introduce new topics or ideas, rather than reiterating what has been said.
-   * This is useful for maintaining a diverse and engaging conversation or for brainstorming sessions where varied ideas are needed.
-   * Example: presencePenalty: 1.0 // Strongly discourages repeating the same content.
-   */
-  presencePenalty?: number;
-
-  /**
-   * This parameter reduces the likelihood of the model repeatedly using the same words or phrases in its responses.
-   * A higher frequency penalty promotes a wider variety of language and expressions in the output.
-   * This is particularly useful in creative writing or content generation tasks where diversity in language is desirable.
-   * Example: frequencyPenalty: 0.5 // Moderately discourages repetitive language.
-   */
-  frequencyPenalty?: number;
 
   logitBias?: Record<number, number>;
 }

@@ -31,12 +31,8 @@ export function chat(
 
       mapSettings: settings => ({
         model: settings.id,
-        max_tokens: settings.maxTokens,
-        temperature: settings.temperature,
         top_p: settings.topP,
         top_k: settings.topK,
-        presence_penalty: settings.presencePenalty,
-        frequency_penalty: settings.frequencyPenalty,
       }),
     },
   );

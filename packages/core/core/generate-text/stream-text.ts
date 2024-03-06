@@ -13,13 +13,24 @@ import { ToToolResult } from './tool-result';
  */
 export async function streamText<TOOLS extends Record<string, Tool>>({
   model,
+  maxCompletionTokens,
+  temperature,
+  presencePenalty,
+  frequencyPenalty,
   tools,
   system,
   prompt,
   messages,
 }: {
   model: LanguageModel;
+
+  maxCompletionTokens?: number;
+  temperature?: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
+
   tools?: TOOLS;
+
   system?: string;
   prompt?: string;
   messages?: Array<Message>;
@@ -30,15 +41,19 @@ export async function streamText<TOOLS extends Record<string, Tool>>({
       tools:
         tools == null
           ? undefined
-          : Object.entries(tools).map(([name, value]) => {
-              const tool = value as Tool<any, unknown>;
-              return {
-                name,
-                description: tool.description,
-                parameters: zodToJsonSchema(tool.parameters),
-              };
-            }),
+          : Object.entries(tools).map(([name, tool]) => ({
+              type: 'function',
+              name,
+              description: tool.description,
+              parameters: zodToJsonSchema(tool.parameters),
+            })),
     },
+
+    maxCompletionTokens,
+    temperature,
+    presencePenalty,
+    frequencyPenalty,
+
     prompt: convertToLanguageModelPrompt({
       system,
       prompt,

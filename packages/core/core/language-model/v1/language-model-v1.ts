@@ -148,7 +148,7 @@ type LanguageModelV1 = {
     }
 );
 
-type LanguageModelV1CallOptions = {
+export type LanguageModelV1CallOptions = {
   /**
    * The mode affects the behavior of the language model. It is required to
    * support provider-independent streaming and generation of structured objects.
@@ -183,7 +183,7 @@ type LanguageModelV1CallOptions = {
    * Alternative name: maxTokens (less verbose, but it is not clear if this refers
    * to prompt tokens, completion tokens, or both)
    */
-  maxCompletionTokens: number;
+  maxCompletionTokens?: number;
 
   /**
    * Temperature setting. This is a number between 0 (almost no randomness) and
@@ -197,21 +197,21 @@ type LanguageModelV1CallOptions = {
    * Note: This is an example of a setting that requires a clear specification of
    * the semantics.
    */
-  temperature: number;
+  temperature?: number;
 
   /**
    * Presence penalty setting. This is a number between 0 (no penalty)
    * and 1 (maximum penalty). It affects the likelihood of the model to repeat
    * information that is already in the prompt.
    */
-  presencePenalty: number;
+  presencePenalty?: number;
 
   /**
    * Frequency penalty setting. This is a number between 0 (no penalty)
    * and 1 (maximum penalty). It affects the likelihood of the model to repeatedly
    * use the same words or phrases.
    */
-  frequencyPenalty: number;
+  frequencyPenalty?: number;
 
   // more standardized settings would come here.
 
@@ -239,7 +239,7 @@ type LanguageModelV1CallOptions = {
  * Note: this is **not** the user-facing tool definition. The AI SDK methods will
  * map the user-facing tool definitions to this format.
  */
-type LanguageModelV1FunctionTool = {
+export type LanguageModelV1FunctionTool = {
   /**
    * The type of the tool. Only functions for now, but this gives us room to
    * add more specific tool types in the future and use a discriminated union.

@@ -68,6 +68,7 @@ export async function streamObject<T>({
         mode: {
           type: 'object-tool',
           tool: {
+            type: 'function',
             name: 'json',
             description: 'Respond with a JSON object.',
             parameters: jsonSchema,

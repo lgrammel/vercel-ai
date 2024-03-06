@@ -7,6 +7,8 @@ dotenv.config();
 async function main() {
   const result = await streamText({
     model: openai.chat({ id: 'gpt-3.5-turbo' }),
+    maxCompletionTokens: 512,
+    temperature: 0.7,
     prompt: 'Invent a new holiday and describe its traditions.',
   });
 

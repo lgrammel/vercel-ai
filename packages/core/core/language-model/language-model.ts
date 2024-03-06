@@ -1,38 +1,19 @@
-import { LanguageModelV1Prompt } from './v1/language-model-v1-prompt';
+import { LanguageModelV1CallOptions } from './v1/language-model-v1';
 
 export interface LanguageModel {
   objectMode: ObjectMode;
 
-  doGenerate(options: LanguageModelCallOptions): PromiseLike<{
+  doGenerate(options: LanguageModelV1CallOptions): PromiseLike<{
     text?: string;
     toolCalls?: Array<LanguageModelToolCall>;
   }>;
 
   doStream(
-    options: LanguageModelCallOptions,
+    options: LanguageModelV1CallOptions,
   ): PromiseLike<ReadableStream<LanguageModelStreamPart>>;
 }
 
 export type ObjectMode = 'tool' | 'json';
-
-type LanguageModelCallOptions = {
-  mode:
-    | { type: 'regular'; tools?: Array<LanguageModelToolDefinition> }
-    | { type: 'object-json' }
-    | { type: 'object-tool'; tool: LanguageModelToolDefinition };
-
-  prompt: LanguageModelV1Prompt;
-};
-
-export interface LanguageModelSettings {
-  maxTokens?: number;
-}
-
-type LanguageModelToolDefinition = {
-  name: string;
-  description?: string;
-  parameters: Record<string, unknown>;
-};
 
 export type ErrorStreamPart = {
   type: 'error';

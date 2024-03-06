@@ -80,6 +80,10 @@ export class MistralChatLanguageModel implements LanguageModel {
         };
       }
 
+      case 'object-grammar': {
+        throw new Error('Grammar mode not supported by Mistral');
+      }
+
       default: {
         const _exhaustiveCheck: never = type;
         throw new Error(`Unsupported type: ${_exhaustiveCheck}`);

@@ -4,18 +4,13 @@ import {
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
 } from 'openai/resources';
-import {
-  LanguageModel,
-  LanguageModelSettings,
-  LanguageModelStreamPart,
-  ObjectMode,
-} from '../../core';
+import { LanguageModel, LanguageModelStreamPart, ObjectMode } from '../../core';
 import { tryParseJSON } from '../../core/util/try-json-parse';
 import { readableFromAsyncIterable } from '../../streams';
-import { convertToOpenAIChatPrompt } from './convert-to-openai-chat-prompt';
+import { convertToOpenAIChatMessages } from './convert-to-openai-chat-messages';
 
 export class OpenAIChatLanguageModel<
-  SETTINGS extends LanguageModelSettings & {
+  SETTINGS extends {
     objectMode?: 'tool' | 'json';
   },
 > implements LanguageModel
@@ -53,26 +48,36 @@ export class OpenAIChatLanguageModel<
   }
 
   private getArgs(
-    option: Parameters<LanguageModel['doGenerate']>[0] & {
-      stream: true;
-    },
+    options: Parameters<LanguageModel['doGenerate']>[0],
+    stream: true,
   ): ChatCompletionCreateParamsStreaming;
   private getArgs(
-    options: Parameters<LanguageModel['doGenerate']>[0] & {
-      stream: false;
-    },
+    options: Parameters<LanguageModel['doGenerate']>[0],
+    stream: false,
   ): ChatCompletionCreateParamsNonStreaming;
-  private getArgs({
-    mode,
-    prompt,
-    stream,
-  }: Parameters<LanguageModel['doGenerate']>[0] & {
-    stream: boolean;
-  }):
+  private getArgs(
+    {
+      mode,
+      prompt,
+      maxCompletionTokens,
+      temperature,
+      frequencyPenalty,
+      presencePenalty,
+    }: Parameters<LanguageModel['doGenerate']>[0],
+    stream: boolean,
+  ):
     | ChatCompletionCreateParamsNonStreaming
     | ChatCompletionCreateParamsStreaming {
     const type = mode.type;
-    const messages = convertToOpenAIChatPrompt(prompt);
+    const messages = convertToOpenAIChatMessages(prompt);
+
+    // TODO standardize temperature, presencePenalty, frequencyPenalty scales
+    const standardizedSettings = {
+      max_tokens: maxCompletionTokens,
+      temperature,
+      frequency_penalty: frequencyPenalty,
+      presence_penalty: presencePenalty,
+    };
 
     switch (type) {
       case 'regular': {
@@ -82,6 +87,7 @@ export class OpenAIChatLanguageModel<
         return {
           stream,
           ...this.basePrompt,
+          ...standardizedSettings,
           messages,
           tools: tools?.map(tool => ({
             type: 'function',
@@ -98,6 +104,7 @@ export class OpenAIChatLanguageModel<
         return {
           stream,
           ...this.basePrompt,
+          ...standardizedSettings,
           response_format: { type: 'json_object' },
           messages,
         };
@@ -107,10 +114,15 @@ export class OpenAIChatLanguageModel<
         return {
           stream,
           ...this.basePrompt,
+          ...standardizedSettings,
           tool_choice: { type: 'function', function: { name: mode.tool.name } },
           tools: [{ type: 'function', function: mode.tool }],
           messages,
         };
+      }
+
+      case 'object-grammar': {
+        throw new Error('Grammar mode is not supported by OpenAI Chat.');
       }
 
       default: {
@@ -120,14 +132,11 @@ export class OpenAIChatLanguageModel<
     }
   }
 
-  async doGenerate({
-    mode,
-    prompt,
-  }: Parameters<LanguageModel['doGenerate']>[0]) {
+  async doGenerate(options: Parameters<LanguageModel['doGenerate']>[0]) {
     const client = await this.getClient();
 
     const completion = await client.chat.completions.create(
-      this.getArgs({ stream: false, mode, prompt }),
+      this.getArgs(options, false),
     );
 
     const message = completion.choices[0].message;
@@ -142,16 +151,13 @@ export class OpenAIChatLanguageModel<
     };
   }
 
-  async doStream({
-    mode,
-    prompt,
-  }: Parameters<LanguageModel['doStream']>[0]): Promise<
-    ReadableStream<LanguageModelStreamPart>
-  > {
+  async doStream(
+    options: Parameters<LanguageModel['doStream']>[0],
+  ): Promise<ReadableStream<LanguageModelStreamPart>> {
     const client = await this.getClient();
 
     const response = await client.chat.completions.create(
-      this.getArgs({ stream: true, mode, prompt }),
+      this.getArgs(options, true),
     );
 
     const toolCalls: Array<{

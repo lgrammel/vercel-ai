@@ -2,7 +2,7 @@ import { ChatCompletionMessageParam } from 'openai/resources';
 import { LanguageModelV1Prompt } from '../../core';
 import { convertUint8ArrayToBase64 } from '../../core/util/uint8-utils';
 
-export function convertToOpenAIChatPrompt(
+export function convertToOpenAIChatMessages(
   prompt: LanguageModelV1Prompt,
 ): Array<ChatCompletionMessageParam> {
   const messages: Array<ChatCompletionMessageParam> = [];
