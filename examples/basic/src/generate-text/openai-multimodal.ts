@@ -7,9 +7,7 @@ dotenv.config();
 
 async function main() {
   const result = await generateText({
-    model: openai.chat({
-      id: 'gpt-4-vision-preview',
-    }),
+    model: openai.chat({ id: 'gpt-4-vision-preview' }),
     maxTokens: 512,
     messages: [
       {

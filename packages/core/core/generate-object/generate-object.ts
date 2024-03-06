@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import { LanguageModel } from '../language-model';
+import { CallSettings } from '../prompt/call-settings';
+import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-model-prompt';
+import { Prompt } from '../prompt/prompt';
 import { safeParseJSON } from '../schema/parse-json';
 import { ZodSchema } from '../schema/zod-schema';
 import { injectJsonSchemaIntoSystem } from './inject-json-schema-into-system';
 import { NoObjectGeneratedError } from './no-object-generated-error';
 import { ObjectParseError } from './object-parse-error';
 import { ObjectValidationError } from './object-validation-error';
-import { Message } from '../prompt';
-import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-model-prompt';
 
 /**
  * Generate a structured, typed object using a language model.
@@ -19,14 +20,13 @@ export async function generateObject<T>({
   system,
   prompt,
   messages,
-}: {
-  model: LanguageModel;
-  schema: z.Schema<T>;
-  mode?: 'json' | 'tool' | 'grammar';
-  system?: string;
-  prompt?: string;
-  messages?: Array<Message>;
-}): Promise<GenerateObjectResult<T>> {
+  ...settings
+}: CallSettings &
+  Prompt & {
+    model: LanguageModel;
+    schema: z.Schema<T>;
+    mode?: 'json' | 'tool' | 'grammar';
+  }): Promise<GenerateObjectResult<T>> {
   const schema = new ZodSchema(zodSchema);
   const jsonSchema = schema.getJsonSchema();
 
@@ -37,6 +37,7 @@ export async function generateObject<T>({
     case 'json': {
       const generateResult = await model.doGenerate({
         mode: { type: 'object-json' },
+        ...settings,
         prompt: convertToLanguageModelPrompt({
           system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
           prompt,
@@ -56,6 +57,7 @@ export async function generateObject<T>({
     case 'grammar': {
       const generateResult = await model.doGenerate({
         mode: { type: 'object-grammar', schema: jsonSchema },
+        ...settings,
         prompt: convertToLanguageModelPrompt({
           system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
           prompt,
@@ -83,6 +85,7 @@ export async function generateObject<T>({
             parameters: jsonSchema,
           },
         },
+        ...settings,
         prompt: convertToLanguageModelPrompt({ system, prompt, messages }),
       });
 

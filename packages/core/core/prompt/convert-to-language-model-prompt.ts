@@ -5,17 +5,13 @@ import {
   LanguageModelV1TextPart,
 } from '../language-model';
 import { convertDataContentToUint8Array } from './data-content';
-import { Message } from './message';
+import { Prompt } from './prompt';
 
 export function convertToLanguageModelPrompt({
   system,
   prompt,
   messages,
-}: {
-  system?: string;
-  prompt?: string;
-  messages?: Array<Message>;
-}): LanguageModelV1Prompt {
+}: Prompt): LanguageModelV1Prompt {
   if (prompt == null && messages == null) {
     throw new Error('prompt or messages must be defined');
   }

@@ -5,12 +5,13 @@ import {
   LanguageModel,
   LanguageModelStreamPart,
 } from '../language-model';
+import { CallSettings } from '../prompt/call-settings';
+import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-model-prompt';
+import { Prompt } from '../prompt/prompt';
 import { ZodSchema } from '../schema/zod-schema';
 import { isDeepEqualData } from '../util/is-deep-equal-data';
 import { parsePartialJson } from '../util/parse-partial-json';
 import { injectJsonSchemaIntoSystem } from './inject-json-schema-into-system';
-import { Message } from '../prompt';
-import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-model-prompt';
 
 /**
  * Stream an object as a partial object stream.
@@ -22,14 +23,13 @@ export async function streamObject<T>({
   system,
   prompt,
   messages,
-}: {
-  model: LanguageModel;
-  schema: z.Schema<T>;
-  mode?: 'json' | 'tool' | 'grammar';
-  system?: string;
-  prompt?: string;
-  messages?: Array<Message>;
-}): Promise<StreamObjectResult<T>> {
+  ...settings
+}: CallSettings &
+  Prompt & {
+    model: LanguageModel;
+    schema: z.Schema<T>;
+    mode?: 'json' | 'tool' | 'grammar';
+  }): Promise<StreamObjectResult<T>> {
   const schema = new ZodSchema(zodSchema);
   const jsonSchema = schema.getJsonSchema();
 
@@ -40,6 +40,7 @@ export async function streamObject<T>({
     case 'json': {
       const streamResponse = await model.doStream({
         mode: { type: 'object-json' },
+        ...settings,
         prompt: convertToLanguageModelPrompt({
           system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
           prompt,
@@ -69,6 +70,7 @@ export async function streamObject<T>({
     case 'grammar': {
       const streamResponse = await model.doStream({
         mode: { type: 'object-grammar', schema: jsonSchema },
+        ...settings,
         prompt: convertToLanguageModelPrompt({
           system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
           prompt,
@@ -106,6 +108,7 @@ export async function streamObject<T>({
             parameters: jsonSchema,
           },
         },
+        ...settings,
         prompt: convertToLanguageModelPrompt({ system, prompt, messages }),
       });
 

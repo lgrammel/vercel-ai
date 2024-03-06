@@ -9,8 +9,9 @@ async function main() {
   const result = await generateObject({
     model: mistral.chat({
       id: 'mistral-large-latest',
-      maxTokens: 2000,
     }),
+
+    maxTokens: 2000,
 
     schema: z.object({
       characters: z.array(

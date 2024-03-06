@@ -1,7 +1,8 @@
 import zodToJsonSchema from 'zod-to-json-schema';
 import { LanguageModel } from '../language-model';
-import { Message } from '../prompt';
+import { CallSettings } from '../prompt/call-settings';
 import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-model-prompt';
+import { Prompt } from '../prompt/prompt';
 import { Tool } from '../tool/tool';
 import { ToToolCallArray, parseToolCall } from './tool-call';
 import { ToToolResultArray } from './tool-result';
@@ -11,28 +12,16 @@ import { ToToolResultArray } from './tool-result';
  */
 export async function generateText<TOOLS extends Record<string, Tool>>({
   model,
-  maxTokens,
-  temperature,
-  presencePenalty,
-  frequencyPenalty,
   tools,
   system,
   prompt,
   messages,
-}: {
-  model: LanguageModel;
-
-  maxTokens?: number;
-  temperature?: number;
-  presencePenalty?: number;
-  frequencyPenalty?: number;
-
-  tools?: TOOLS;
-
-  system?: string;
-  prompt?: string;
-  messages?: Array<Message>;
-}): Promise<GenerateTextResult<TOOLS>> {
+  ...settings
+}: CallSettings &
+  Prompt & {
+    model: LanguageModel;
+    tools?: TOOLS;
+  }): Promise<GenerateTextResult<TOOLS>> {
   const modelResponse = await model.doGenerate({
     mode: {
       type: 'regular',
@@ -46,12 +35,7 @@ export async function generateText<TOOLS extends Record<string, Tool>>({
               parameters: zodToJsonSchema(tool.parameters),
             })),
     },
-
-    maxTokens,
-    temperature,
-    presencePenalty,
-    frequencyPenalty,
-
+    ...settings,
     prompt: convertToLanguageModelPrompt({
       system,
       prompt,

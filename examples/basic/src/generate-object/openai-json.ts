@@ -7,12 +7,8 @@ dotenv.config();
 
 async function main() {
   const result = await generateObject({
-    model: openai.chat({
-      id: 'gpt-4-turbo-preview',
-      maxTokens: 2000,
-      objectMode: 'json',
-    }),
-
+    model: openai.chat({ id: 'gpt-4-turbo-preview' }),
+    maxTokens: 2000,
     schema: z.object({
       characters: z.array(
         z.object({
@@ -24,7 +20,7 @@ async function main() {
         }),
       ),
     }),
-
+    mode: 'json',
     prompt:
       'Generate 3 character descriptions for a fantasy role playing game.',
   });
