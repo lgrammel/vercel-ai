@@ -1,32 +1,24 @@
-import { LanguageModel, ObjectMode } from '..';
+import { LanguageModel } from '..';
 
 export class MockLanguageModel implements LanguageModel {
   doGenerate: LanguageModel['doGenerate'];
   doStream: LanguageModel['doStream'];
 
-  _objectMode: ObjectMode | undefined;
+  readonly defaultObjectGenerationMode: LanguageModel['defaultObjectGenerationMode'];
 
   constructor({
     doGenerate = notImplemented,
     doStream = notImplemented,
-    objectMode,
+    defaultObjectGenerationMode = undefined,
   }: {
     doGenerate?: LanguageModel['doGenerate'];
     doStream?: LanguageModel['doStream'];
-    objectMode?: ObjectMode;
+    defaultObjectGenerationMode?: LanguageModel['defaultObjectGenerationMode'];
   }) {
     this.doGenerate = doGenerate;
     this.doStream = doStream;
 
-    this._objectMode = objectMode;
-  }
-
-  get objectMode(): ObjectMode {
-    if (this._objectMode === undefined) {
-      throw new Error('objectMode not set');
-    }
-
-    return this._objectMode;
+    this.defaultObjectGenerationMode = defaultObjectGenerationMode;
   }
 }
 

@@ -11,9 +11,9 @@ describe('result.textStream', () => {
       model: new MockLanguageModel({
         doStream: async ({ prompt, mode }) => {
           assert.deepStrictEqual(mode, { type: 'regular', tools: undefined });
-          assert.deepStrictEqual(prompt, {
-            messages: [{ role: 'user', content: 'test-input' }],
-          });
+          assert.deepStrictEqual(prompt, [
+            { role: 'user', content: [{ type: 'text', text: 'test-input' }] },
+          ]);
 
           return convertArrayToReadableStream([
             { type: 'text-delta', textDelta: 'Hello' },
@@ -38,9 +38,9 @@ describe('result.fullStream', () => {
       model: new MockLanguageModel({
         doStream: async ({ prompt, mode }) => {
           assert.deepStrictEqual(mode, { type: 'regular', tools: undefined });
-          assert.deepStrictEqual(prompt, {
-            messages: [{ role: 'user', content: 'test-input' }],
-          });
+          assert.deepStrictEqual(prompt, [
+            { role: 'user', content: [{ type: 'text', text: 'test-input' }] },
+          ]);
 
           return convertArrayToReadableStream([
             { type: 'text-delta', textDelta: 'Hello' },
@@ -70,6 +70,7 @@ describe('result.fullStream', () => {
             type: 'regular',
             tools: [
               {
+                type: 'function',
                 name: 'tool1',
                 description: undefined,
                 parameters: {
@@ -82,9 +83,9 @@ describe('result.fullStream', () => {
               },
             ],
           });
-          assert.deepStrictEqual(prompt, {
-            messages: [{ role: 'user', content: 'test-input' }],
-          });
+          assert.deepStrictEqual(prompt, [
+            { role: 'user', content: [{ type: 'text', text: 'test-input' }] },
+          ]);
 
           return convertArrayToReadableStream([
             {
@@ -125,6 +126,7 @@ describe('result.fullStream', () => {
             type: 'regular',
             tools: [
               {
+                type: 'function',
                 name: 'tool1',
                 description: undefined,
                 parameters: {
@@ -137,9 +139,9 @@ describe('result.fullStream', () => {
               },
             ],
           });
-          assert.deepStrictEqual(prompt, {
-            messages: [{ role: 'user', content: 'test-input' }],
-          });
+          assert.deepStrictEqual(prompt, [
+            { role: 'user', content: [{ type: 'text', text: 'test-input' }] },
+          ]);
 
           return convertArrayToReadableStream([
             {

@@ -7,12 +7,11 @@ describe('result.text', () => {
   it('should generate text', async () => {
     const result = await generateText({
       model: new MockLanguageModel({
-        objectMode: 'json',
         doGenerate: async ({ prompt, mode }) => {
           assert.deepStrictEqual(mode, { type: 'regular', tools: undefined });
-          assert.deepStrictEqual(prompt, {
-            messages: [{ role: 'user', content: 'prompt' }],
-          });
+          assert.deepStrictEqual(prompt, [
+            { role: 'user', content: [{ type: 'text', text: 'prompt' }] },
+          ]);
 
           return {
             text: `Hello, world!`,
@@ -35,6 +34,7 @@ describe('result.toolCalls', () => {
             type: 'regular',
             tools: [
               {
+                type: 'function',
                 name: 'tool1',
                 description: undefined,
                 parameters: {
@@ -46,6 +46,7 @@ describe('result.toolCalls', () => {
                 },
               },
               {
+                type: 'function',
                 name: 'tool2',
                 description: undefined,
                 parameters: {
@@ -58,9 +59,9 @@ describe('result.toolCalls', () => {
               },
             ],
           });
-          assert.deepStrictEqual(prompt, {
-            messages: [{ role: 'user', content: 'test-input' }],
-          });
+          assert.deepStrictEqual(prompt, [
+            { role: 'user', content: [{ type: 'text', text: 'test-input' }] },
+          ]);
 
           return {
             toolCalls: [
@@ -109,6 +110,7 @@ describe('result.toolResults', () => {
             type: 'regular',
             tools: [
               {
+                type: 'function',
                 name: 'tool1',
                 description: undefined,
                 parameters: {
@@ -121,9 +123,9 @@ describe('result.toolResults', () => {
               },
             ],
           });
-          assert.deepStrictEqual(prompt, {
-            messages: [{ role: 'user', content: 'test-input' }],
-          });
+          assert.deepStrictEqual(prompt, [
+            { role: 'user', content: [{ type: 'text', text: 'test-input' }] },
+          ]);
 
           return {
             toolCalls: [
