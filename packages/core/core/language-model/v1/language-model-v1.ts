@@ -51,6 +51,11 @@ type LanguageModelV1 = {
     toolCalls?: Array<LanguageModelV1FunctionToolCall>;
 
     /**
+     * Finish reason.
+     */
+    finishReason: LanguageModelV1FinishReason;
+
+    /**
      * Usage information.
      */
     usage: {
@@ -84,9 +89,11 @@ type LanguageModelV1 = {
           argsTextDelta: string;
         }
 
-      // the usage stats should be the last part of the stream:
+      // the usage stats and finish reason should be the last part of the
+      // stream:
       | {
-          type: 'usage-stats';
+          type: 'final-metadata';
+          finishReason: LanguageModelV1FinishReason;
           usage: { promptTokens: number; completionTokens: number };
         }
 
@@ -273,3 +280,11 @@ type LanguageModelV1FunctionToolCall = {
    */
   args: string;
 };
+
+type LanguageModelV1FinishReason =
+  | 'stop' // model generated stop sequence
+  | 'length' // model generated maximum number of tokens
+  | 'content-filter' // content filter violation stopped the model
+  | 'tool-calls' // model triggered tool calls
+  | 'error' // model stopped because of an error
+  | 'other'; // model stopped for other reasons

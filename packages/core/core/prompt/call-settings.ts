@@ -15,7 +15,8 @@ export type CallSettings = {
   /**
    * Nucleus sampling. This is a number between 0 and 1.
    *
-   * E.g. 0.1 would mean that only tokens with the top 10% probability mass are considered.
+   * E.g. 0.1 would mean that only tokens with the top 10% probability mass
+   * are considered.
    *
    * It is recommended to set either `temperature` or `topP`, but not both.
    */
@@ -30,8 +31,8 @@ export type CallSettings = {
 
   /**
    * Frequency penalty setting. This is a number between 0 (no penalty)
-   * and 1 (maximum penalty). It affects the likelihood of the model to repeatedly
-   * use the same words or phrases.
+   * and 1 (maximum penalty). It affects the likelihood of the model to
+   * repeatedly use the same words or phrases.
    */
   frequencyPenalty?: number;
 
