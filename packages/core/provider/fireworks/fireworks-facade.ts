@@ -32,7 +32,6 @@ export function chat(
       mapSettings: settings => ({
         model: settings.id,
         prompt_truncate_len: settings.promptTruncateLength,
-        top_p: settings.topP,
         top_k: settings.topK,
         context_length_exceeded_behavior:
           settings.contextLengthExceededBehavior,

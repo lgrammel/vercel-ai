@@ -31,7 +31,6 @@ export function chat(
 
       mapSettings: settings => ({
         model: settings.id,
-        top_p: settings.topP,
         top_k: settings.topK,
       }),
     },

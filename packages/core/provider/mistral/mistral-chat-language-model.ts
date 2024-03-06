@@ -28,9 +28,6 @@ export class MistralChatLanguageModel implements LanguageModel {
   private get basePrompt() {
     return {
       model: this.settings.id,
-
-      topP: this.settings.topP,
-      randomSeed: this.settings.randomSeed,
       safePrompt: this.settings.safePrompt,
     };
   }
@@ -40,8 +37,10 @@ export class MistralChatLanguageModel implements LanguageModel {
     prompt,
     maxTokens,
     temperature,
+    topP,
     frequencyPenalty,
     presencePenalty,
+    seed,
   }: Parameters<LanguageModel['doGenerate']>[0]): Parameters<
     MistralClient['chat']
   >[0] {
@@ -53,6 +52,8 @@ export class MistralChatLanguageModel implements LanguageModel {
     const standardizedSettings = {
       maxTokens,
       temperature,
+      topP,
+      randomSeed: seed,
     };
 
     switch (type) {

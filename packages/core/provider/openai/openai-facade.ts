@@ -30,8 +30,6 @@ export function chat(
 
       mapSettings: settings => ({
         model: settings.id,
-        top_p: settings.topP,
-        seed: settings.seed,
         logit_bias: settings.logitBias,
       }),
     },

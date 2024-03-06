@@ -54,8 +54,10 @@ export class OpenAIChatLanguageModel<SETTINGS> implements LanguageModel {
       prompt,
       maxTokens,
       temperature,
+      topP,
       frequencyPenalty,
       presencePenalty,
+      seed,
     }: Parameters<LanguageModel['doGenerate']>[0],
     stream: boolean,
   ):
@@ -68,8 +70,10 @@ export class OpenAIChatLanguageModel<SETTINGS> implements LanguageModel {
     const standardizedSettings = {
       max_tokens: maxTokens,
       temperature,
+      top_p: topP,
       frequency_penalty: frequencyPenalty,
       presence_penalty: presencePenalty,
+      seed,
     };
 
     switch (type) {
