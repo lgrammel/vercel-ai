@@ -13,7 +13,7 @@ import { ToToolResult } from './tool-result';
  */
 export async function streamText<TOOLS extends Record<string, Tool>>({
   model,
-  maxCompletionTokens,
+  maxTokens,
   temperature,
   presencePenalty,
   frequencyPenalty,
@@ -24,7 +24,7 @@ export async function streamText<TOOLS extends Record<string, Tool>>({
 }: {
   model: LanguageModel;
 
-  maxCompletionTokens?: number;
+  maxTokens?: number;
   temperature?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
@@ -49,7 +49,7 @@ export async function streamText<TOOLS extends Record<string, Tool>>({
             })),
     },
 
-    maxCompletionTokens,
+    maxTokens,
     temperature,
     presencePenalty,
     frequencyPenalty,

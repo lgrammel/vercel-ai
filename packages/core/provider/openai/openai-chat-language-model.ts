@@ -4,18 +4,15 @@ import {
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
 } from 'openai/resources';
-import { LanguageModel, LanguageModelStreamPart, ObjectMode } from '../../core';
+import { LanguageModel, LanguageModelStreamPart } from '../../core';
 import { tryParseJSON } from '../../core/util/try-json-parse';
 import { readableFromAsyncIterable } from '../../streams';
 import { convertToOpenAIChatMessages } from './convert-to-openai-chat-messages';
 
-export class OpenAIChatLanguageModel<
-  SETTINGS extends {
-    objectMode?: 'tool' | 'json';
-  },
-> implements LanguageModel
-{
+export class OpenAIChatLanguageModel<SETTINGS> implements LanguageModel {
   readonly settings: SETTINGS;
+
+  readonly defaultObjectGenerationMode = 'tool';
 
   private readonly getClient: () => Promise<OpenAI>;
   private readonly mapSettings: (settings: SETTINGS) => Record<
@@ -39,10 +36,6 @@ export class OpenAIChatLanguageModel<
     this.mapSettings = config.mapSettings;
   }
 
-  get objectMode(): ObjectMode {
-    return this.settings.objectMode ?? 'tool';
-  }
-
   private get basePrompt() {
     return this.mapSettings(this.settings);
   }
@@ -59,7 +52,7 @@ export class OpenAIChatLanguageModel<
     {
       mode,
       prompt,
-      maxCompletionTokens,
+      maxTokens,
       temperature,
       frequencyPenalty,
       presencePenalty,
@@ -73,7 +66,7 @@ export class OpenAIChatLanguageModel<
 
     // TODO standardize temperature, presencePenalty, frequencyPenalty scales
     const standardizedSettings = {
-      max_tokens: maxCompletionTokens,
+      max_tokens: maxTokens,
       temperature,
       frequency_penalty: frequencyPenalty,
       presence_penalty: presencePenalty,

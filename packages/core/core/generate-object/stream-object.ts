@@ -18,23 +18,25 @@ import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-mode
 export async function streamObject<T>({
   model,
   schema: zodSchema,
+  mode,
   system,
   prompt,
   messages,
 }: {
   model: LanguageModel;
   schema: z.Schema<T>;
+  mode?: 'json' | 'tool' | 'grammar';
   system?: string;
   prompt?: string;
   messages?: Array<Message>;
 }): Promise<StreamObjectResult<T>> {
   const schema = new ZodSchema(zodSchema);
   const jsonSchema = schema.getJsonSchema();
-  const objectMode = model.objectMode;
 
   let modelStream: ReadableStream<string | ErrorStreamPart>;
 
-  switch (objectMode) {
+  mode = mode ?? model.defaultObjectGenerationMode;
+  switch (mode) {
     case 'json': {
       const streamResponse = await model.doStream({
         mode: { type: 'object-json' },
@@ -45,6 +47,36 @@ export async function streamObject<T>({
         }),
       });
 
+      // TODO remove duplication
+      modelStream = streamResponse.pipeThrough(
+        new TransformStream<LanguageModelStreamPart, string | ErrorStreamPart>({
+          transform(chunk, controller) {
+            switch (chunk.type) {
+              case 'text-delta':
+                controller.enqueue(chunk.textDelta);
+                break;
+              case 'error':
+                controller.enqueue(chunk);
+                break;
+            }
+          },
+        }),
+      );
+
+      break;
+    }
+
+    case 'grammar': {
+      const streamResponse = await model.doStream({
+        mode: { type: 'object-grammar', schema: jsonSchema },
+        prompt: convertToLanguageModelPrompt({
+          system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
+          prompt,
+          messages,
+        }),
+      });
+
+      // TODO remove duplication
       modelStream = streamResponse.pipeThrough(
         new TransformStream<LanguageModelStreamPart, string | ErrorStreamPart>({
           transform(chunk, controller) {
@@ -95,9 +127,13 @@ export async function streamObject<T>({
       break;
     }
 
+    case undefined: {
+      throw new Error('Model does not have a default object generation mode.');
+    }
+
     default: {
-      const _exhaustiveCheck: never = objectMode;
-      throw new Error(`Unsupported objectMode: ${_exhaustiveCheck}`);
+      const _exhaustiveCheck: never = mode;
+      throw new Error(`Unsupported mode: ${_exhaustiveCheck}`);
     }
   }
 

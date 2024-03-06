@@ -22,6 +22,16 @@ type LanguageModelV1 = {
   readonly modelId: string;
 
   /**
+   * Default object generation mode that should be used with this model when
+   * no mode is specified. Should be the mode with the best results for this
+   * model. `undefined` can be returned if object generation is not supported.
+   *
+   * This is needed to generate the best objects possible w/o requiring the
+   * user to explicitly specify the object generation mode.
+   */
+  readonly defaultObjectGenerationMode: 'json' | 'tool' | 'grammar' | undefined;
+
+  /**
    * Generates a language model output (non-streaming).
    *
    * Naming: "do" prefix to prevent accidental direct usage of the method
@@ -84,22 +94,6 @@ type LanguageModelV1 = {
       | { type: 'error'; error: unknown }
     >
   >;
-
-  /**
-   * Returns the desired object mode for object generation.
-   * We need to know the object generation mode to supply the correct
-   * information and modify the prompt as needed.
-   *
-   * Exposing the objectGenerationMode as a model property is requires to
-   * easily exchange models (e.g. pass them into function calls) and
-   * because not all models support all object modes.
-   *
-   * It also enables models (such as OpenAI) to expose
-   * additional modes (such as function calls) as tool calls for object
-   * generation. `null` means that the model does not support object
-   * generation.
-   */
-  readonly objectGenerationMode: 'json' | 'tool' | 'grammar' | null;
 } & ( // Tokenization capability (example of an optional capability):
   | {
       /**
@@ -169,7 +163,7 @@ export type LanguageModelV1CallOptions = {
     | {
         // object generation with grammar enabled, stream text
         type: 'object-grammar';
-        grammar: JsonSchema;
+        schema: JsonSchema;
       }
     | {
         // object generation with tool mode enabled, stream tool call deltas
@@ -179,11 +173,8 @@ export type LanguageModelV1CallOptions = {
 
   /**
    * Maximum number of tokens to generate.
-   *
-   * Alternative name: maxTokens (less verbose, but it is not clear if this refers
-   * to prompt tokens, completion tokens, or both)
    */
-  maxCompletionTokens?: number;
+  maxTokens?: number;
 
   /**
    * Temperature setting. This is a number between 0 (almost no randomness) and

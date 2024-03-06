@@ -1,7 +1,15 @@
 import { LanguageModelV1CallOptions } from './v1/language-model-v1';
 
 export interface LanguageModel {
-  objectMode: ObjectMode;
+  /**
+   * Default object generation mode that should be used with this model when
+   * no mode is specified. Should be the mode with the best results for this
+   * model. `undefined` can be returned if object generation is not supported.
+   *
+   * This is needed to generate the best objects possible w/o requiring the
+   * user to explicitly specify the object generation mode.
+   */
+  readonly defaultObjectGenerationMode: 'json' | 'tool' | 'grammar' | undefined;
 
   doGenerate(options: LanguageModelV1CallOptions): PromiseLike<{
     text?: string;
@@ -12,8 +20,6 @@ export interface LanguageModel {
     options: LanguageModelV1CallOptions,
   ): PromiseLike<ReadableStream<LanguageModelStreamPart>>;
 }
-
-export type ObjectMode = 'tool' | 'json';
 
 export type ErrorStreamPart = {
   type: 'error';

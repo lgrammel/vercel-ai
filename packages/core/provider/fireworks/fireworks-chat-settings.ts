@@ -1,13 +1,9 @@
-import { ObjectMode } from '../../core';
-
 export type FireworksChatModelId = `accounts/${string}/models/${string}`;
 
 /**
  * @see https://readme.fireworks.ai/reference/createchatcompletion
  */
 export interface FireworksChatSettings {
-  objectMode?: ObjectMode;
-
   /**
    * The ID of the model to use.
    */

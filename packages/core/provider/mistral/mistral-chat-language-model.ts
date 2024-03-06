@@ -3,7 +3,7 @@ import MistralClient, {
   ResponseFormat,
   ToolChoice,
 } from '@mistralai/mistralai';
-import { LanguageModel, LanguageModelStreamPart, ObjectMode } from '../../core';
+import { LanguageModel, LanguageModelStreamPart } from '../../core';
 import { readableFromAsyncIterable } from '../../streams/ai-stream';
 import { convertToMistralChatPrompt } from './convert-to-mistral-chat-prompt';
 import { MistralChatSettings } from './mistral-chat-settings';
@@ -11,25 +11,24 @@ import { MistralChatSettings } from './mistral-chat-settings';
 export class MistralChatLanguageModel implements LanguageModel {
   readonly settings: MistralChatSettings;
 
-  constructor(settings: MistralChatSettings) {
+  readonly defaultObjectGenerationMode = 'json';
+
+  private readonly getClient: () => Promise<MistralClient>;
+
+  constructor(
+    settings: MistralChatSettings,
+    config: {
+      client: () => Promise<MistralClient>;
+    },
+  ) {
     this.settings = settings;
-  }
-
-  private getClient(): Promise<MistralClient> {
-    return this.settings.client();
-  }
-
-  get objectMode(): ObjectMode {
-    return this.settings.objectMode ?? 'json';
+    this.getClient = config.client;
   }
 
   private get basePrompt() {
     return {
       model: this.settings.id,
 
-      maxTokens: this.settings.maxTokens,
-
-      temperature: this.settings.temperature,
       topP: this.settings.topP,
       randomSeed: this.settings.randomSeed,
       safePrompt: this.settings.safePrompt,
@@ -39,16 +38,28 @@ export class MistralChatLanguageModel implements LanguageModel {
   private getArgs({
     mode,
     prompt,
+    maxTokens,
+    temperature,
+    frequencyPenalty,
+    presencePenalty,
   }: Parameters<LanguageModel['doGenerate']>[0]): Parameters<
     MistralClient['chat']
   >[0] {
     const type = mode.type;
     const messages = convertToMistralChatPrompt(prompt);
 
+    // TODO standardize temperature scale
+    // TODO warnings for presencePenalty, frequencyPenalty
+    const standardizedSettings = {
+      maxTokens,
+      temperature,
+    };
+
     switch (type) {
       case 'regular': {
         return {
           ...this.basePrompt,
+          ...standardizedSettings,
           messages,
           // TODO tools
         };
@@ -57,6 +68,7 @@ export class MistralChatLanguageModel implements LanguageModel {
       case 'object-json': {
         return {
           ...this.basePrompt,
+          ...standardizedSettings,
           responseFormat: { type: 'json_object' } as ResponseFormat,
           messages,
         };
@@ -65,6 +77,7 @@ export class MistralChatLanguageModel implements LanguageModel {
       case 'object-tool': {
         return {
           ...this.basePrompt,
+          ...standardizedSettings,
           toolChoice: 'any' as ToolChoice,
           tools: [
             {

@@ -10,21 +10,23 @@ export function chat(
     apiKey?: string;
   },
 ) {
-  const { client, apiKey, ...rest } = settings;
-  return new MistralChatLanguageModel({
-    ...rest,
-    client: async () => {
-      if (client) {
-        return client;
-      }
+  const { client, apiKey, ...remainingSettings } = settings;
+  return new MistralChatLanguageModel(
+    { ...remainingSettings },
+    {
+      client: async () => {
+        if (client) {
+          return client;
+        }
 
-      return createMistralClient({
-        apiKey: loadApiKey({
-          apiKey,
-          environmentVariableName: 'MISTRAL_API_KEY',
-          description: 'Mistral',
-        }),
-      });
+        return createMistralClient({
+          apiKey: loadApiKey({
+            apiKey,
+            environmentVariableName: 'MISTRAL_API_KEY',
+            description: 'Mistral',
+          }),
+        });
+      },
     },
-  });
+  );
 }

@@ -11,8 +11,6 @@ export type PerplexityChatModelId =
  * @see https://docs.perplexity.ai/reference/post_chat_completions
  */
 export interface PerplexityChatSettings {
-  objectMode?: undefined;
-
   /**
    * The ID of the model to use.
    */

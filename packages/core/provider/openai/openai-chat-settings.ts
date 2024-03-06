@@ -1,5 +1,3 @@
-import { ObjectMode } from '../../core';
-
 // https://platform.openai.com/docs/models
 export type OpenAIChatModelId =
   | 'gpt-4'
@@ -22,8 +20,6 @@ export type OpenAIChatModelId =
   | (string & {});
 
 export interface OpenAIChatSettings {
-  objectMode?: ObjectMode;
-
   /**
    * The ID of the model to use.
    */

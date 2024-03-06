@@ -15,26 +15,47 @@ import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-mode
 export async function generateObject<T>({
   model,
   schema: zodSchema,
+  mode,
   system,
   prompt,
   messages,
 }: {
   model: LanguageModel;
   schema: z.Schema<T>;
+  mode?: 'json' | 'tool' | 'grammar';
   system?: string;
   prompt?: string;
   messages?: Array<Message>;
 }): Promise<GenerateObjectResult<T>> {
   const schema = new ZodSchema(zodSchema);
   const jsonSchema = schema.getJsonSchema();
-  const objectMode = model.objectMode;
 
   let result: string;
 
-  switch (objectMode) {
+  mode = mode ?? model.defaultObjectGenerationMode;
+  switch (mode) {
     case 'json': {
       const generateResult = await model.doGenerate({
         mode: { type: 'object-json' },
+        prompt: convertToLanguageModelPrompt({
+          system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
+          prompt,
+          messages,
+        }),
+      });
+
+      if (generateResult.text === undefined) {
+        throw new NoObjectGeneratedError();
+      }
+
+      result = generateResult.text;
+
+      break;
+    }
+
+    case 'grammar': {
+      const generateResult = await model.doGenerate({
+        mode: { type: 'object-grammar', schema: jsonSchema },
         prompt: convertToLanguageModelPrompt({
           system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
           prompt,
@@ -76,9 +97,13 @@ export async function generateObject<T>({
       break;
     }
 
+    case undefined: {
+      throw new Error('Model does not have a default object generation mode.');
+    }
+
     default: {
-      const _exhaustiveCheck: never = objectMode;
-      throw new Error(`Unsupported objectMode: ${_exhaustiveCheck}`);
+      const _exhaustiveCheck: never = mode;
+      throw new Error(`Unsupported mode: ${_exhaustiveCheck}`);
     }
   }
 

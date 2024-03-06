@@ -8,7 +8,8 @@ dotenv.config();
 
 async function main() {
   const result = await generateText({
-    model: openai.chat({ id: 'gpt-3.5-turbo', maxTokens: 2000 }),
+    model: openai.chat({ id: 'gpt-3.5-turbo' }),
+    maxTokens: 512,
     tools: {
       weather: weatherTool,
       cityAttractions: tool({
