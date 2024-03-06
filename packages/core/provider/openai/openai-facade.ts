@@ -37,8 +37,6 @@ export function chat(
         presence_penalty: settings.presencePenalty,
         frequency_penalty: settings.frequencyPenalty,
         logit_bias: settings.logitBias,
-
-        objectMode: settings.objectMode,
       }),
     },
   );

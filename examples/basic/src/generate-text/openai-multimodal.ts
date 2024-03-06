@@ -12,12 +12,15 @@ async function main() {
       maxTokens: 512,
     }),
 
-    prompt: {
-      instruction: [
-        { type: 'text', text: 'Describe the image in detail.' },
-        { type: 'image', image: fs.readFileSync('./data/comic-cat.png') },
-      ],
-    },
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Describe the image in detail.' },
+          { type: 'image', image: fs.readFileSync('./data/comic-cat.png') },
+        ],
+      },
+    ],
   });
 
   console.log(result.text);

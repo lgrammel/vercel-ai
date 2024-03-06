@@ -1,16 +1,16 @@
 import { PartialDeep } from 'type-fest';
 import { z } from 'zod';
-import { ZodSchema } from '../../schema/zod-schema';
-import { isDeepEqualData } from '../../util/is-deep-equal-data';
-import { parsePartialJson } from '../../util/parse-partial-json';
 import {
   ErrorStreamPart,
   LanguageModel,
   LanguageModelStreamPart,
 } from '../language-model';
-import { InstructionPrompt } from '../prompt/instruction-prompt';
-import { convertToChatPrompt } from '../prompt/convert-to-chat-prompt';
-import { injectJsonSchemaIntoInstructionPrompt } from './inject-json-schema-into-instruction-prompt';
+import { ZodSchema } from '../schema/zod-schema';
+import { isDeepEqualData } from '../util/is-deep-equal-data';
+import { parsePartialJson } from '../util/parse-partial-json';
+import { injectJsonSchemaIntoSystem } from './inject-json-schema-into-system';
+import { Message } from '../prompt';
+import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-model-prompt';
 
 /**
  * Stream an object as a partial object stream.
@@ -18,11 +18,15 @@ import { injectJsonSchemaIntoInstructionPrompt } from './inject-json-schema-into
 export async function streamObject<T>({
   model,
   schema: zodSchema,
+  system,
   prompt,
+  messages,
 }: {
   model: LanguageModel;
   schema: z.Schema<T>;
-  prompt: InstructionPrompt;
+  system?: string;
+  prompt?: string;
+  messages?: Array<Message>;
 }): Promise<StreamObjectResult<T>> {
   const schema = new ZodSchema(zodSchema);
   const jsonSchema = schema.getJsonSchema();
@@ -34,12 +38,11 @@ export async function streamObject<T>({
     case 'json': {
       const streamResponse = await model.doStream({
         mode: { type: 'object-json' },
-        prompt: convertToChatPrompt(
-          injectJsonSchemaIntoInstructionPrompt({
-            prompt,
-            schema: jsonSchema,
-          }),
-        ),
+        prompt: convertToLanguageModelPrompt({
+          system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
+          prompt,
+          messages,
+        }),
       });
 
       modelStream = streamResponse.pipeThrough(
@@ -70,7 +73,7 @@ export async function streamObject<T>({
             parameters: jsonSchema,
           },
         },
-        prompt: convertToChatPrompt(prompt),
+        prompt: convertToLanguageModelPrompt({ system, prompt, messages }),
       });
 
       modelStream = streamResponse.pipeThrough(

@@ -1,4 +1,4 @@
-import { getErrorMessage } from '../../util/get-error-message';
+import { getErrorMessage } from '../util/get-error-message';
 
 export class ObjectParseError extends Error {
   readonly cause: unknown;

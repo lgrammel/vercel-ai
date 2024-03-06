@@ -1,4 +1,4 @@
-import { ChatPrompt, ToolCallPart, ToolResultPart, streamText } from 'ai/core';
+import { Message, ToolCallPart, ToolResultPart, streamText } from 'ai/core';
 import { openai } from 'ai/provider';
 import dotenv from 'dotenv';
 import * as readline from 'node:readline/promises';
@@ -11,10 +11,7 @@ const terminal = readline.createInterface({
   output: process.stdout,
 });
 
-const chat: ChatPrompt = {
-  system: `You are a helpful, respectful and honest assistant.`,
-  messages: [],
-};
+const messages: Message[] = [];
 
 async function main() {
   let toolResponseAvailable = false;
@@ -22,13 +19,14 @@ async function main() {
   while (true) {
     if (!toolResponseAvailable) {
       const userInput = await terminal.question('You: ');
-      chat.messages.push({ role: 'user', content: userInput });
+      messages.push({ role: 'user', content: userInput });
     }
 
     const result = await streamText({
       model: openai.chat({ id: 'gpt-3.5-turbo' }),
       tools: { weatherTool },
-      prompt: chat,
+      system: `You are a helpful, respectful and honest assistant.`,
+      messages,
     });
 
     toolResponseAvailable = false;
@@ -71,13 +69,13 @@ async function main() {
     }
     process.stdout.write('\n\n');
 
-    chat.messages.push({
+    messages.push({
       role: 'assistant',
       content: [{ type: 'text', text: fullResponse }, ...toolCalls],
     });
 
     if (toolResponses.length > 0) {
-      chat.messages.push({ role: 'tool', content: toolResponses });
+      messages.push({ role: 'tool', content: toolResponses });
     }
 
     toolResponseAvailable = toolCalls.length > 0;

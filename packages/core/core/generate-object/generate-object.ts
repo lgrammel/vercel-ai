@@ -1,13 +1,13 @@
 import { z } from 'zod';
-import { safeParseJSON } from '../../schema/parse-json';
-import { ZodSchema } from '../../schema/zod-schema';
 import { LanguageModel } from '../language-model';
-import { convertToChatPrompt } from '../prompt/convert-to-chat-prompt';
-import { InstructionPrompt } from '../prompt/instruction-prompt';
-import { injectJsonSchemaIntoInstructionPrompt } from './inject-json-schema-into-instruction-prompt';
+import { safeParseJSON } from '../schema/parse-json';
+import { ZodSchema } from '../schema/zod-schema';
+import { injectJsonSchemaIntoSystem } from './inject-json-schema-into-system';
 import { NoObjectGeneratedError } from './no-object-generated-error';
 import { ObjectParseError } from './object-parse-error';
 import { ObjectValidationError } from './object-validation-error';
+import { Message } from '../prompt';
+import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-model-prompt';
 
 /**
  * Generate a structured, typed object using a language model.
@@ -15,11 +15,15 @@ import { ObjectValidationError } from './object-validation-error';
 export async function generateObject<T>({
   model,
   schema: zodSchema,
+  system,
   prompt,
+  messages,
 }: {
   model: LanguageModel;
   schema: z.Schema<T>;
-  prompt: InstructionPrompt;
+  system?: string;
+  prompt?: string;
+  messages?: Array<Message>;
 }): Promise<GenerateObjectResult<T>> {
   const schema = new ZodSchema(zodSchema);
   const jsonSchema = schema.getJsonSchema();
@@ -31,12 +35,11 @@ export async function generateObject<T>({
     case 'json': {
       const generateResult = await model.doGenerate({
         mode: { type: 'object-json' },
-        prompt: convertToChatPrompt(
-          injectJsonSchemaIntoInstructionPrompt({
-            prompt,
-            schema: jsonSchema,
-          }),
-        ),
+        prompt: convertToLanguageModelPrompt({
+          system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
+          prompt,
+          messages,
+        }),
       });
 
       if (generateResult.text === undefined) {
@@ -58,7 +61,7 @@ export async function generateObject<T>({
             parameters: jsonSchema,
           },
         },
-        prompt: convertToChatPrompt(prompt),
+        prompt: convertToLanguageModelPrompt({ system, prompt, messages }),
       });
 
       const functionArgs = generateResult.toolCalls?.[0]?.args;

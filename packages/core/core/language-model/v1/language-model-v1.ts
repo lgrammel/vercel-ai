@@ -1,7 +1,5 @@
-import { ChatPrompt } from '../prompt/chat-prompt';
-
-type LanguageModelPrompt = ChatPrompt;
-type JsonSchema = Record<string, unknown>;
+import { JsonSchema } from './json-schema';
+import { LanguageModelV1Prompt } from './language-model-v1-prompt';
 
 type LanguageModelV1 = {
   /**
@@ -29,7 +27,7 @@ type LanguageModelV1 = {
    * Naming: "do" prefix to prevent accidental direct usage of the method
    * by the user.
    */
-  doGenerate(options: LanguageModelCallOptions): PromiseLike<{
+  doGenerate(options: LanguageModelV1CallOptions): PromiseLike<{
     /**
      * Text that the model has generated. Can be undefined if the model
      * has only generated tool calls.
@@ -40,7 +38,7 @@ type LanguageModelV1 = {
      * Tool calls that the model has generated. Can be undefined if the
      * model has only generated text.
      */
-    toolCalls?: Array<LanguageModelFunctionToolCall>;
+    toolCalls?: Array<LanguageModelV1FunctionToolCall>;
 
     /**
      * Usage information.
@@ -59,13 +57,13 @@ type LanguageModelV1 = {
    *
    * @return A stream of higher-level language model output parts.
    */
-  doStream(options: LanguageModelCallOptions): PromiseLike<
+  doStream(options: LanguageModelV1CallOptions): PromiseLike<
     ReadableStream<
       // Basic text deltas:
       | { type: 'text-delta'; textDelta: string }
 
       // Complete tool calls:
-      | ({ type: 'tool-call' } & LanguageModelFunctionToolCall)
+      | ({ type: 'tool-call' } & LanguageModelV1FunctionToolCall)
 
       // Tool call deltas are only needed for object generation modes.
       // The tool call deltas must be partial JSON strings.
@@ -123,7 +121,7 @@ type LanguageModelV1 = {
        *              This should be accurate to enable calculating the remaining
        *              available tokens.
        */
-      doCountTokens(value: LanguageModelPrompt | string): PromiseLike<number>;
+      doCountTokens(value: LanguageModelV1Prompt | string): PromiseLike<number>;
 
       /**
        * Tokenize the given text using the model tokenizer.
@@ -150,7 +148,7 @@ type LanguageModelV1 = {
     }
 );
 
-type LanguageModelCallOptions = {
+type LanguageModelV1CallOptions = {
   /**
    * The mode affects the behavior of the language model. It is required to
    * support provider-independent streaming and generation of structured objects.
@@ -162,7 +160,7 @@ type LanguageModelCallOptions = {
     | {
         // stream text & complete tool calls
         type: 'regular';
-        tools?: Array<LanguageModelFunctionTool>;
+        tools?: Array<LanguageModelV1FunctionTool>;
       }
     | {
         // object generation with json mode enabled, stream text
@@ -176,7 +174,7 @@ type LanguageModelCallOptions = {
     | {
         // object generation with tool mode enabled, stream tool call deltas
         type: 'object-tool';
-        tool: LanguageModelFunctionTool;
+        tool: LanguageModelV1FunctionTool;
       };
 
   /**
@@ -232,7 +230,7 @@ type LanguageModelCallOptions = {
    * That approach allows us to evolve the user  facing prompts without breaking
    * the language model interface.
    */
-  prompt: LanguageModelPrompt;
+  prompt: LanguageModelV1Prompt;
 };
 
 /**
@@ -241,7 +239,7 @@ type LanguageModelCallOptions = {
  * Note: this is **not** the user-facing tool definition. The AI SDK methods will
  * map the user-facing tool definitions to this format.
  */
-type LanguageModelFunctionTool = {
+type LanguageModelV1FunctionTool = {
   /**
    * The type of the tool. Only functions for now, but this gives us room to
    * add more specific tool types in the future and use a discriminated union.
@@ -258,7 +256,7 @@ type LanguageModelFunctionTool = {
   parameters: JsonSchema;
 };
 
-type LanguageModelFunctionToolCall = {
+type LanguageModelV1FunctionToolCall = {
   type: 'function';
   toolCallId: string;
   toolName: string;

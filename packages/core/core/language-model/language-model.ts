@@ -1,4 +1,4 @@
-import { ChatPrompt } from './prompt/chat-prompt';
+import { LanguageModelV1Prompt } from './v1/language-model-v1-prompt';
 
 export interface LanguageModel {
   objectMode: ObjectMode;
@@ -20,7 +20,8 @@ type LanguageModelCallOptions = {
     | { type: 'regular'; tools?: Array<LanguageModelToolDefinition> }
     | { type: 'object-json' }
     | { type: 'object-tool'; tool: LanguageModelToolDefinition };
-  prompt: ChatPrompt;
+
+  prompt: LanguageModelV1Prompt;
 };
 
 export interface LanguageModelSettings {

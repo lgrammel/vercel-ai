@@ -40,8 +40,6 @@ export function chat(
         frequency_penalty: settings.frequencyPenalty,
         context_length_exceeded_behavior:
           settings.contextLengthExceededBehavior,
-
-        objectMode: settings.objectMode,
       }),
     },
   );

@@ -1,8 +1,7 @@
 import zodToJsonSchema from 'zod-to-json-schema';
 import { LanguageModel } from '../language-model';
-import { ChatPrompt } from '../prompt/chat-prompt';
-import { convertToChatPrompt } from '../prompt/convert-to-chat-prompt';
-import { InstructionPrompt } from '../prompt/instruction-prompt';
+import { Message } from '../prompt';
+import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-model-prompt';
 import { Tool } from '../tool/tool';
 import { ToToolCallArray, parseToolCall } from './tool-call';
 import { ToToolResultArray } from './tool-result';
@@ -13,11 +12,15 @@ import { ToToolResultArray } from './tool-result';
 export async function generateText<TOOLS extends Record<string, Tool>>({
   model,
   tools,
+  system,
   prompt,
+  messages,
 }: {
   model: LanguageModel;
   tools?: TOOLS;
-  prompt: InstructionPrompt | ChatPrompt;
+  system?: string;
+  prompt?: string;
+  messages?: Array<Message>;
 }): Promise<GenerateTextResult<TOOLS>> {
   const modelResponse = await model.doGenerate({
     mode: {
@@ -34,7 +37,11 @@ export async function generateText<TOOLS extends Record<string, Tool>>({
               };
             }),
     },
-    prompt: convertToChatPrompt(prompt),
+    prompt: convertToLanguageModelPrompt({
+      system,
+      prompt,
+      messages,
+    }),
   });
 
   // parse tool calls:

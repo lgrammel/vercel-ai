@@ -1,4 +1,4 @@
-import { ChatPrompt, streamText } from 'ai/core';
+import { Message, streamText } from 'ai/core';
 import { openai } from 'ai/provider';
 import dotenv from 'dotenv';
 import * as readline from 'node:readline/promises';
@@ -10,20 +10,18 @@ const terminal = readline.createInterface({
   output: process.stdout,
 });
 
-const chat: ChatPrompt = {
-  system: `You are a helpful, respectful and honest assistant.`,
-  messages: [],
-};
+const messages: Message[] = [];
 
 async function main() {
   while (true) {
     const userInput = await terminal.question('You: ');
 
-    chat.messages.push({ role: 'user', content: userInput });
+    messages.push({ role: 'user', content: userInput });
 
     const result = await streamText({
       model: openai.chat({ id: 'gpt-3.5-turbo' }),
-      prompt: chat,
+      system: `You are a helpful, respectful and honest assistant.`,
+      messages,
     });
 
     let fullResponse = '';
@@ -34,7 +32,7 @@ async function main() {
     }
     process.stdout.write('\n\n');
 
-    chat.messages.push({ role: 'assistant', content: fullResponse });
+    messages.push({ role: 'assistant', content: fullResponse });
   }
 }
 

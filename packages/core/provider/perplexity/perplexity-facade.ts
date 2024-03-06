@@ -37,8 +37,6 @@ export function chat(
         top_k: settings.topK,
         presence_penalty: settings.presencePenalty,
         frequency_penalty: settings.frequencyPenalty,
-
-        objectMode: undefined,
       }),
     },
   );

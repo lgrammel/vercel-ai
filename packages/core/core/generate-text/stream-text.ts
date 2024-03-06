@@ -1,8 +1,7 @@
 import zodToJsonSchema from 'zod-to-json-schema';
 import { LanguageModel } from '../language-model';
-import { ChatPrompt } from '../prompt/chat-prompt';
-import { convertToChatPrompt } from '../prompt/convert-to-chat-prompt';
-import { InstructionPrompt } from '../prompt/instruction-prompt';
+import { convertToLanguageModelPrompt } from '../prompt/convert-to-language-model-prompt';
+import { Message } from '../prompt/message';
 import { Tool } from '../tool';
 import { runToolsTransformation } from './run-tools-transformation';
 import { StreamTextHttpResponse } from './stream-text-http-response';
@@ -14,12 +13,16 @@ import { ToToolResult } from './tool-result';
  */
 export async function streamText<TOOLS extends Record<string, Tool>>({
   model,
-  prompt,
   tools,
+  system,
+  prompt,
+  messages,
 }: {
   model: LanguageModel;
-  prompt: InstructionPrompt | ChatPrompt;
   tools?: TOOLS;
+  system?: string;
+  prompt?: string;
+  messages?: Array<Message>;
 }): Promise<StreamTextResult<TOOLS>> {
   const modelStream = await model.doStream({
     mode: {
@@ -36,7 +39,11 @@ export async function streamText<TOOLS extends Record<string, Tool>>({
               };
             }),
     },
-    prompt: convertToChatPrompt(prompt),
+    prompt: convertToLanguageModelPrompt({
+      system,
+      prompt,
+      messages,
+    }),
   });
 
   const toolStream = runToolsTransformation({
