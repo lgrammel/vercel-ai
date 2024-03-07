@@ -79,6 +79,14 @@ type LanguageModelV1 = {
        */
       rawSettings: Record<string, unknown>;
     };
+
+    /**
+     * Any warnings from the model provider for this call.
+     */
+    warnings: Array<
+      | { type: 'unsupported-setting'; setting: string }
+      | { type: 'other'; message: string }
+    >;
   }>;
 
   /**
@@ -89,8 +97,8 @@ type LanguageModelV1 = {
    *
    * @return A stream of higher-level language model output parts.
    */
-  doStream(options: LanguageModelV1CallOptions): PromiseLike<
-    ReadableStream<
+  doStream(options: LanguageModelV1CallOptions): PromiseLike<{
+    stream: ReadableStream<
       // Basic text deltas:
       | { type: 'text-delta'; textDelta: string }
 
@@ -106,15 +114,6 @@ type LanguageModelV1 = {
           argsTextDelta: string;
         }
 
-      // the expanded prompt and settings for observability provider integration
-      | {
-          type: 'start-metadata';
-          rawCall: {
-            rawPrompt: unknown;
-            rawSettings: Record<string, unknown>;
-          };
-        }
-
       // the usage stats and finish reason should be the last part of the
       // stream:
       | {
@@ -125,8 +124,33 @@ type LanguageModelV1 = {
 
       // error parts are streamed, allowing for multiple errors
       | { type: 'error'; error: unknown }
-    >
-  >;
+    >;
+
+    /**
+     * Raw prompt and setting information for observability provider integration.
+     */
+    rawCall: {
+      /**
+       * Raw prompt after expansion and conversion to the format that the
+       * provider uses to send the information to their API.
+       */
+      rawPrompt: unknown;
+
+      /**
+       * Raw settings that are used for the API call. Includes provider-specific
+       * settings.
+       */
+      rawSettings: Record<string, unknown>;
+    };
+
+    /**
+     * Any warnings from the model provider for this call.
+     */
+    warnings: Array<
+      | { type: 'unsupported-setting'; setting: string }
+      | { type: 'other'; message: string }
+    >;
+  }>;
 } & ( // Tokenization capability (example of an optional capability):
   | {
       /**
