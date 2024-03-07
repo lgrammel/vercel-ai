@@ -22,14 +22,17 @@ describe('result.objectStream', () => {
             { role: 'user', content: [{ type: 'text', text: 'prompt' }] },
           ]);
 
-          return convertArrayToReadableStream([
-            { type: 'text-delta', textDelta: '{ ' },
-            { type: 'text-delta', textDelta: '"content": ' },
-            { type: 'text-delta', textDelta: `"Hello, ` },
-            { type: 'text-delta', textDelta: `world` },
-            { type: 'text-delta', textDelta: `!"` },
-            { type: 'text-delta', textDelta: ' }' },
-          ]);
+          return {
+            stream: convertArrayToReadableStream([
+              { type: 'text-delta', textDelta: '{ ' },
+              { type: 'text-delta', textDelta: '"content": ' },
+              { type: 'text-delta', textDelta: `"Hello, ` },
+              { type: 'text-delta', textDelta: `world` },
+              { type: 'text-delta', textDelta: `!"` },
+              { type: 'text-delta', textDelta: ' }' },
+            ]),
+            warnings: [],
+          };
         },
       }),
       schema: z.object({ content: z.string() }),
@@ -71,44 +74,47 @@ describe('result.objectStream', () => {
             { role: 'user', content: [{ type: 'text', text: 'prompt' }] },
           ]);
 
-          return convertArrayToReadableStream([
-            {
-              type: 'tool-call-delta',
-              toolCallId: 'tool-call-1',
-              toolName: 'json',
-              argsTextDelta: '{ ',
-            },
-            {
-              type: 'tool-call-delta',
-              toolCallId: 'tool-call-1',
-              toolName: 'json',
-              argsTextDelta: '"content": ',
-            },
-            {
-              type: 'tool-call-delta',
-              toolCallId: 'tool-call-1',
-              toolName: 'json',
-              argsTextDelta: `"Hello, `,
-            },
-            {
-              type: 'tool-call-delta',
-              toolCallId: 'tool-call-1',
-              toolName: 'json',
-              argsTextDelta: `world`,
-            },
-            {
-              type: 'tool-call-delta',
-              toolCallId: 'tool-call-1',
-              toolName: 'json',
-              argsTextDelta: `!"`,
-            },
-            {
-              type: 'tool-call-delta',
-              toolCallId: 'tool-call-1',
-              toolName: 'json',
-              argsTextDelta: ' }',
-            },
-          ]);
+          return {
+            stream: convertArrayToReadableStream([
+              {
+                type: 'tool-call-delta',
+                toolCallId: 'tool-call-1',
+                toolName: 'json',
+                argsTextDelta: '{ ',
+              },
+              {
+                type: 'tool-call-delta',
+                toolCallId: 'tool-call-1',
+                toolName: 'json',
+                argsTextDelta: '"content": ',
+              },
+              {
+                type: 'tool-call-delta',
+                toolCallId: 'tool-call-1',
+                toolName: 'json',
+                argsTextDelta: `"Hello, `,
+              },
+              {
+                type: 'tool-call-delta',
+                toolCallId: 'tool-call-1',
+                toolName: 'json',
+                argsTextDelta: `world`,
+              },
+              {
+                type: 'tool-call-delta',
+                toolCallId: 'tool-call-1',
+                toolName: 'json',
+                argsTextDelta: `!"`,
+              },
+              {
+                type: 'tool-call-delta',
+                toolCallId: 'tool-call-1',
+                toolName: 'json',
+                argsTextDelta: ' }',
+              },
+            ]),
+            warnings: [],
+          };
         },
       }),
       schema: z.object({ content: z.string() }),

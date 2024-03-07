@@ -15,11 +15,14 @@ describe('result.textStream', () => {
             { role: 'user', content: [{ type: 'text', text: 'test-input' }] },
           ]);
 
-          return convertArrayToReadableStream([
-            { type: 'text-delta', textDelta: 'Hello' },
-            { type: 'text-delta', textDelta: ', ' },
-            { type: 'text-delta', textDelta: `world!` },
-          ]);
+          return {
+            stream: convertArrayToReadableStream([
+              { type: 'text-delta', textDelta: 'Hello' },
+              { type: 'text-delta', textDelta: ', ' },
+              { type: 'text-delta', textDelta: `world!` },
+            ]),
+            warnings: [],
+          };
         },
       }),
       prompt: 'test-input',
@@ -42,11 +45,14 @@ describe('result.fullStream', () => {
             { role: 'user', content: [{ type: 'text', text: 'test-input' }] },
           ]);
 
-          return convertArrayToReadableStream([
-            { type: 'text-delta', textDelta: 'Hello' },
-            { type: 'text-delta', textDelta: ', ' },
-            { type: 'text-delta', textDelta: `world!` },
-          ]);
+          return {
+            stream: convertArrayToReadableStream([
+              { type: 'text-delta', textDelta: 'Hello' },
+              { type: 'text-delta', textDelta: ', ' },
+              { type: 'text-delta', textDelta: `world!` },
+            ]),
+            warnings: [],
+          };
         },
       }),
       prompt: 'test-input',
@@ -87,14 +93,17 @@ describe('result.fullStream', () => {
             { role: 'user', content: [{ type: 'text', text: 'test-input' }] },
           ]);
 
-          return convertArrayToReadableStream([
-            {
-              type: 'tool-call',
-              toolCallId: 'call-1',
-              toolName: 'tool1',
-              args: `{ "value": "value" }`,
-            },
-          ]);
+          return {
+            stream: convertArrayToReadableStream([
+              {
+                type: 'tool-call',
+                toolCallId: 'call-1',
+                toolName: 'tool1',
+                args: `{ "value": "value" }`,
+              },
+            ]),
+            warnings: [],
+          };
         },
       }),
       tools: {
@@ -143,14 +152,17 @@ describe('result.fullStream', () => {
             { role: 'user', content: [{ type: 'text', text: 'test-input' }] },
           ]);
 
-          return convertArrayToReadableStream([
-            {
-              type: 'tool-call',
-              toolCallId: 'call-1',
-              toolName: 'tool1',
-              args: `{ "value": "value" }`,
-            },
-          ]);
+          return {
+            stream: convertArrayToReadableStream([
+              {
+                type: 'tool-call',
+                toolCallId: 'call-1',
+                toolName: 'tool1',
+                args: `{ "value": "value" }`,
+              },
+            ]),
+            warnings: [],
+          };
         },
       }),
       tools: {
