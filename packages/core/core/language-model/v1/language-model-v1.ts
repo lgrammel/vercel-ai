@@ -62,6 +62,23 @@ type LanguageModelV1 = {
       promptTokens: number;
       completionTokens: number;
     };
+
+    /**
+     * Raw prompt and setting information for observability provider integration.
+     */
+    rawCall: {
+      /**
+       * Raw prompt after expansion and conversion to the format that the
+       * provider uses to send the information to their API.
+       */
+      rawPrompt: unknown;
+
+      /**
+       * Raw settings that are used for the API call. Includes provider-specific
+       * settings.
+       */
+      rawSettings: Record<string, unknown>;
+    };
   }>;
 
   /**
@@ -89,10 +106,19 @@ type LanguageModelV1 = {
           argsTextDelta: string;
         }
 
+      // the expanded prompt and settings for observability provider integration
+      | {
+          type: 'start-metadata';
+          rawCall: {
+            rawPrompt: unknown;
+            rawSettings: Record<string, unknown>;
+          };
+        }
+
       // the usage stats and finish reason should be the last part of the
       // stream:
       | {
-          type: 'final-metadata';
+          type: 'finish-metadata';
           finishReason: LanguageModelV1FinishReason;
           usage: { promptTokens: number; completionTokens: number };
         }
@@ -114,15 +140,43 @@ type LanguageModelV1 = {
       readonly contextWindowSize: number;
 
       /**
-       * Count the number of tokens in the given text or prompt.
+       * Count the number of tokens in the given text.
        *
-       * @param value When it is a text, tokenize & count the tokens.
-       *              When it is a prompt, expand it, tokenize & count the tokens
-       *              for the full prompt.
-       *              This should be accurate to enable calculating the remaining
+       * @param value Text to count the tokens for.
+       * @return Number of tokens in the text.
+       */
+      doCountTokens(value: string): PromiseLike<number>;
+
+      /**
+       * Count the number of tokens in the prompt. The prompt is expanded and the
+       * tokens are counted for the full prompt. This includes extra tokens e.g.
+       * for special chat symbols and takes the potential prompt expansion into
+       * account
+       *
+       * @param inputFormat Whether the user provided the input as messages or as
+       *                    a prompt. This can help guide non-chat models in the
+       *                    expansion, bc different expansions can be needed for
+       *                    chat/non-chat use cases.
+       * @param value When it is a prompt, expand it, tokenize & count the tokens
+       *              for the full prompt. This should be accurate and include
+       *              special symbol tokens to enable calculating the remaining
        *              available tokens.
        */
-      doCountTokens(value: LanguageModelV1Prompt | string): PromiseLike<number>;
+      doCountPromptTokens(options: {
+        inputFormat: 'messages' | 'prompt';
+        value: LanguageModelV1Prompt;
+      }): PromiseLike<{
+        /**
+         * Expanded, raw prompt for which the tokens are counted.
+         */
+        rawPrompt: unknown;
+
+        /**
+         * When a prompt is provided, this is the number of prompt tokens that the
+         * prompt would consume if it was used.
+         */
+        tokenCount: number;
+      }>;
 
       /**
        * Tokenize the given text using the model tokenizer.
@@ -151,11 +205,20 @@ type LanguageModelV1 = {
 
 export type LanguageModelV1CallOptions = {
   /**
+   * Whether the user provided the input as messages or as
+   * a prompt. This can help guide non-chat models in the
+   * expansion, bc different expansions can be needed for
+   * chat/non-chat use cases.
+   */
+  inputFormat: 'messages' | 'prompt';
+
+  /**
    * The mode affects the behavior of the language model. It is required to
    * support provider-independent streaming and generation of structured objects.
    * The model can take this information and e.g. configure json mode, the correct
    * low level grammar, etc. It can also be used to optimize the efficiency of the
-   * streaming, e.g. tool-delta stream parts are only needed in the object-tool mode.
+   * streaming, e.g. tool-delta stream parts are only needed in the
+   * object-tool mode.
    */
   mode:
     | {
@@ -200,7 +263,8 @@ export type LanguageModelV1CallOptions = {
   /**
    * Nucleus sampling. This is a number between 0 and 1.
    *
-   * E.g. 0.1 would mean that only tokens with the top 10% probability mass are considered.
+   * E.g. 0.1 would mean that only tokens with the top 10% probability mass
+   * are considered.
    *
    * It is recommended to set either `temperature` or `topP`, but not both.
    */
