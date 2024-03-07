@@ -6,6 +6,7 @@ import { Prompt } from '../prompt/prompt';
 import { Tool } from '../tool/tool';
 import { ToToolCallArray, parseToolCall } from './tool-call';
 import { ToToolResultArray } from './tool-result';
+import { getInputFormat } from '../prompt/get-input-format';
 
 /**
  * Generate a text and call tools using a language model.
@@ -36,6 +37,7 @@ export async function generateText<TOOLS extends Record<string, Tool>>({
             })),
     },
     ...settings,
+    inputFormat: getInputFormat({ prompt, messages }),
     prompt: convertToLanguageModelPrompt({
       system,
       prompt,

@@ -12,6 +12,7 @@ import { ZodSchema } from '../schema/zod-schema';
 import { isDeepEqualData } from '../util/is-deep-equal-data';
 import { parsePartialJson } from '../util/parse-partial-json';
 import { injectJsonSchemaIntoSystem } from './inject-json-schema-into-system';
+import { getInputFormat } from '../prompt/get-input-format';
 
 /**
  * Stream an object as a partial object stream.
@@ -38,9 +39,10 @@ export async function streamObject<T>({
   mode = mode ?? model.defaultObjectGenerationMode;
   switch (mode) {
     case 'json': {
-      const streamResponse = await model.doStream({
+      const { stream, warnings } = await model.doStream({
         mode: { type: 'object-json' },
         ...settings,
+        inputFormat: getInputFormat({ prompt, messages }),
         prompt: convertToLanguageModelPrompt({
           system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
           prompt,
@@ -49,7 +51,7 @@ export async function streamObject<T>({
       });
 
       // TODO remove duplication
-      modelStream = streamResponse.pipeThrough(
+      modelStream = stream.pipeThrough(
         new TransformStream<LanguageModelStreamPart, string | ErrorStreamPart>({
           transform(chunk, controller) {
             switch (chunk.type) {
@@ -68,9 +70,10 @@ export async function streamObject<T>({
     }
 
     case 'grammar': {
-      const streamResponse = await model.doStream({
+      const { stream, warnings } = await model.doStream({
         mode: { type: 'object-grammar', schema: jsonSchema },
         ...settings,
+        inputFormat: getInputFormat({ prompt, messages }),
         prompt: convertToLanguageModelPrompt({
           system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
           prompt,
@@ -79,7 +82,7 @@ export async function streamObject<T>({
       });
 
       // TODO remove duplication
-      modelStream = streamResponse.pipeThrough(
+      modelStream = stream.pipeThrough(
         new TransformStream<LanguageModelStreamPart, string | ErrorStreamPart>({
           transform(chunk, controller) {
             switch (chunk.type) {
@@ -98,7 +101,7 @@ export async function streamObject<T>({
     }
 
     case 'tool': {
-      const streamResponse = await model.doStream({
+      const { stream, warnings } = await model.doStream({
         mode: {
           type: 'object-tool',
           tool: {
@@ -109,10 +112,11 @@ export async function streamObject<T>({
           },
         },
         ...settings,
+        inputFormat: getInputFormat({ prompt, messages }),
         prompt: convertToLanguageModelPrompt({ system, prompt, messages }),
       });
 
-      modelStream = streamResponse.pipeThrough(
+      modelStream = stream.pipeThrough(
         new TransformStream<LanguageModelStreamPart, string | ErrorStreamPart>({
           transform(chunk, controller) {
             switch (chunk.type) {

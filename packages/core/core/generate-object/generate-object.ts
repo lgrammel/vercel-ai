@@ -9,6 +9,7 @@ import { injectJsonSchemaIntoSystem } from './inject-json-schema-into-system';
 import { NoObjectGeneratedError } from './no-object-generated-error';
 import { ObjectParseError } from './object-parse-error';
 import { ObjectValidationError } from './object-validation-error';
+import { getInputFormat } from '../prompt/get-input-format';
 
 /**
  * Generate a structured, typed object using a language model.
@@ -38,6 +39,7 @@ export async function generateObject<T>({
       const generateResult = await model.doGenerate({
         mode: { type: 'object-json' },
         ...settings,
+        inputFormat: getInputFormat({ prompt, messages }),
         prompt: convertToLanguageModelPrompt({
           system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
           prompt,
@@ -58,6 +60,7 @@ export async function generateObject<T>({
       const generateResult = await model.doGenerate({
         mode: { type: 'object-grammar', schema: jsonSchema },
         ...settings,
+        inputFormat: getInputFormat({ prompt, messages }),
         prompt: convertToLanguageModelPrompt({
           system: injectJsonSchemaIntoSystem({ system, schema: jsonSchema }),
           prompt,
@@ -86,6 +89,7 @@ export async function generateObject<T>({
           },
         },
         ...settings,
+        inputFormat: getInputFormat({ prompt, messages }),
         prompt: convertToLanguageModelPrompt({ system, prompt, messages }),
       });
 

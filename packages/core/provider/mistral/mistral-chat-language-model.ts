@@ -105,13 +105,12 @@ export class MistralChatLanguageModel implements LanguageModel {
     }
   }
 
-  async doGenerate({
-    mode,
-    prompt,
-  }: Parameters<LanguageModel['doGenerate']>[0]) {
+  async doGenerate(
+    options: Parameters<LanguageModel['doGenerate']>[0],
+  ): Promise<Awaited<ReturnType<LanguageModel['doGenerate']>>> {
     const client = await this.getClient();
 
-    const clientResponse = await client.chat(this.getArgs({ mode, prompt }));
+    const clientResponse = await client.chat(this.getArgs(options));
 
     // Note: correct types not supported by MistralClient as of 2024-Feb-28
     const message = clientResponse.choices[0].message as any;
@@ -123,22 +122,24 @@ export class MistralChatLanguageModel implements LanguageModel {
         toolName: toolCall.function.name,
         args: toolCall.function.arguments,
       })),
+      warnings: [], // TODO implement warnings for settings
     };
   }
 
-  async doStream({
-    mode,
-    prompt,
-  }: Parameters<LanguageModel['doStream']>[0]): Promise<
-    ReadableStream<LanguageModelStreamPart>
-  > {
+  async doStream(
+    options: Parameters<LanguageModel['doStream']>[0],
+  ): Promise<Awaited<ReturnType<LanguageModel['doStream']>>> {
     const client = await this.getClient();
 
-    const response = client.chatStream(this.getArgs({ mode, prompt }));
+    const response = client.chatStream(this.getArgs(options));
 
-    return readableFromAsyncIterable(response).pipeThrough(
-      new TransformStream<ChatCompletionResponseChunk, LanguageModelStreamPart>(
-        {
+    return {
+      warnings: [], // TODO implement warnings for settings
+      stream: readableFromAsyncIterable(response).pipeThrough(
+        new TransformStream<
+          ChatCompletionResponseChunk,
+          LanguageModelStreamPart
+        >({
           transform(chunk, controller) {
             if (chunk.choices?.[0].delta == null) {
               return;
@@ -155,7 +156,7 @@ export class MistralChatLanguageModel implements LanguageModel {
 
             // Note: Mistral does not support tool streaming as of 2024-Feb-29
             // The result come in a single chunk as content.
-            if (mode.type === 'object-tool' && delta.content != null) {
+            if (options.mode.type === 'object-tool' && delta.content != null) {
               controller.enqueue({
                 type: 'tool-call-delta',
                 toolCallId: delta.tool_calls?.[0]?.id ?? '', // TODO empty?
@@ -164,8 +165,8 @@ export class MistralChatLanguageModel implements LanguageModel {
               });
             }
           },
-        },
+        }),
       ),
-    );
+    };
   }
 }

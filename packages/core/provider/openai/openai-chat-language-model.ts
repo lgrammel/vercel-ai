@@ -129,7 +129,9 @@ export class OpenAIChatLanguageModel<SETTINGS> implements LanguageModel {
     }
   }
 
-  async doGenerate(options: Parameters<LanguageModel['doGenerate']>[0]) {
+  async doGenerate(
+    options: Parameters<LanguageModel['doGenerate']>[0],
+  ): Promise<Awaited<ReturnType<LanguageModel['doGenerate']>>> {
     const client = await this.getClient();
 
     const completion = await client.chat.completions.create(
@@ -145,12 +147,13 @@ export class OpenAIChatLanguageModel<SETTINGS> implements LanguageModel {
         toolName: toolCall.function.name,
         args: toolCall.function.arguments!,
       })),
+      warnings: [],
     };
   }
 
   async doStream(
     options: Parameters<LanguageModel['doStream']>[0],
-  ): Promise<ReadableStream<LanguageModelStreamPart>> {
+  ): Promise<Awaited<ReturnType<LanguageModel['doStream']>>> {
     const client = await this.getClient();
 
     const response = await client.chat.completions.create(
@@ -166,70 +169,73 @@ export class OpenAIChatLanguageModel<SETTINGS> implements LanguageModel {
       };
     }> = [];
 
-    return readableFromAsyncIterable(response).pipeThrough(
-      new TransformStream<
-        OpenAI.Chat.Completions.ChatCompletionChunk,
-        LanguageModelStreamPart
-      >({
-        transform(chunk, controller) {
-          if (chunk.choices?.[0].delta == null) {
-            return;
-          }
+    return {
+      warnings: [],
+      stream: readableFromAsyncIterable(response).pipeThrough(
+        new TransformStream<
+          OpenAI.Chat.Completions.ChatCompletionChunk,
+          LanguageModelStreamPart
+        >({
+          transform(chunk, controller) {
+            if (chunk.choices?.[0].delta == null) {
+              return;
+            }
 
-          const delta = chunk.choices[0].delta;
+            const delta = chunk.choices[0].delta;
 
-          if (delta.content != null) {
-            controller.enqueue({
-              type: 'text-delta',
-              textDelta: delta.content,
-            });
-          }
-
-          if (delta.tool_calls != null) {
-            for (const toolCallDelta of delta.tool_calls) {
-              const index = toolCallDelta.index;
-
-              // new tool call, add to list
-              if (toolCalls[index] == null) {
-                toolCalls[index] = toolCallDelta;
-                continue;
-              }
-
-              // existing tool call, merge
-              const toolCall = toolCalls[index];
-
-              if (toolCallDelta.function?.arguments != null) {
-                toolCall.function!.arguments +=
-                  toolCallDelta.function?.arguments ?? '';
-              }
-
-              // send delta
+            if (delta.content != null) {
               controller.enqueue({
-                type: 'tool-call-delta',
-                toolCallId: toolCall.id ?? '', // TODO empty?
-                toolName: toolCall.function?.name ?? '', // TODO empty?
-                argsTextDelta: toolCallDelta.function?.arguments ?? '', // TODO empty?
-              });
-
-              // check if tool call is complete
-              if (
-                toolCall.function?.name == null ||
-                toolCall.function?.arguments == null ||
-                tryParseJSON(toolCall.function.arguments) == null
-              ) {
-                continue;
-              }
-
-              controller.enqueue({
-                type: 'tool-call',
-                toolCallId: toolCall.id ?? nanoid(),
-                toolName: toolCall.function.name,
-                args: toolCall.function.arguments,
+                type: 'text-delta',
+                textDelta: delta.content,
               });
             }
-          }
-        },
-      }),
-    );
+
+            if (delta.tool_calls != null) {
+              for (const toolCallDelta of delta.tool_calls) {
+                const index = toolCallDelta.index;
+
+                // new tool call, add to list
+                if (toolCalls[index] == null) {
+                  toolCalls[index] = toolCallDelta;
+                  continue;
+                }
+
+                // existing tool call, merge
+                const toolCall = toolCalls[index];
+
+                if (toolCallDelta.function?.arguments != null) {
+                  toolCall.function!.arguments +=
+                    toolCallDelta.function?.arguments ?? '';
+                }
+
+                // send delta
+                controller.enqueue({
+                  type: 'tool-call-delta',
+                  toolCallId: toolCall.id ?? '', // TODO empty?
+                  toolName: toolCall.function?.name ?? '', // TODO empty?
+                  argsTextDelta: toolCallDelta.function?.arguments ?? '', // TODO empty?
+                });
+
+                // check if tool call is complete
+                if (
+                  toolCall.function?.name == null ||
+                  toolCall.function?.arguments == null ||
+                  tryParseJSON(toolCall.function.arguments) == null
+                ) {
+                  continue;
+                }
+
+                controller.enqueue({
+                  type: 'tool-call',
+                  toolCallId: toolCall.id ?? nanoid(),
+                  toolName: toolCall.function.name,
+                  args: toolCall.function.arguments,
+                });
+              }
+            }
+          },
+        }),
+      ),
+    };
   }
 }

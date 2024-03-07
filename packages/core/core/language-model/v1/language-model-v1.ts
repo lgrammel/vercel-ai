@@ -80,13 +80,7 @@ type LanguageModelV1 = {
       rawSettings: Record<string, unknown>;
     };
 
-    /**
-     * Any warnings from the model provider for this call.
-     */
-    warnings: Array<
-      | { type: 'unsupported-setting'; setting: string }
-      | { type: 'other'; message: string }
-    >;
+    warnings: LanguageModelV1CallWarning[];
   }>;
 
   /**
@@ -143,13 +137,7 @@ type LanguageModelV1 = {
       rawSettings: Record<string, unknown>;
     };
 
-    /**
-     * Any warnings from the model provider for this call.
-     */
-    warnings: Array<
-      | { type: 'unsupported-setting'; setting: string }
-      | { type: 'other'; message: string }
-    >;
+    warnings: LanguageModelV1CallWarning[];
   }>;
 } & ( // Tokenization capability (example of an optional capability):
   | {
@@ -226,6 +214,14 @@ type LanguageModelV1 = {
       readonly tokenizationCapability: false;
     }
 );
+
+/**
+ * Warning from the model provider for this call. The call will proceed, but e.g.
+ * some settings might not be supported, which can lead to suboptimal results.
+ */
+export type LanguageModelV1CallWarning =
+  | { type: 'unsupported-setting'; setting: string }
+  | { type: 'other'; message: string };
 
 export type LanguageModelV1CallOptions = {
   /**

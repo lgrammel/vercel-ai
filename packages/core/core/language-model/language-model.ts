@@ -14,12 +14,22 @@ export interface LanguageModel {
   doGenerate(options: LanguageModelV1CallOptions): PromiseLike<{
     text?: string;
     toolCalls?: Array<LanguageModelToolCall>;
+    warnings: LanguageModelCallWarning[];
   }>;
 
-  doStream(
-    options: LanguageModelV1CallOptions,
-  ): PromiseLike<ReadableStream<LanguageModelStreamPart>>;
+  doStream(options: LanguageModelV1CallOptions): PromiseLike<{
+    stream: ReadableStream<LanguageModelStreamPart>;
+    warnings: LanguageModelCallWarning[];
+  }>;
 }
+
+/**
+ * Warning from the model provider for this call. The call will proceed, but e.g.
+ * some settings might not be supported, which can lead to suboptimal results.
+ */
+export type LanguageModelCallWarning =
+  | { type: 'unsupported-setting'; setting: string }
+  | { type: 'other'; message: string };
 
 export type ErrorStreamPart = {
   type: 'error';
