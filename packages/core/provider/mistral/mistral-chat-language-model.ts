@@ -7,6 +7,7 @@ import { LanguageModel, LanguageModelStreamPart } from '../../core';
 import { readableFromAsyncIterable } from '../../streams/ai-stream';
 import { convertToMistralChatPrompt } from './convert-to-mistral-chat-prompt';
 import { MistralChatSettings } from './mistral-chat-settings';
+import { LanguageModelV1CallWarning } from '../../core/language-model/v1/language-model-v1';
 
 export class MistralChatLanguageModel implements LanguageModel {
   readonly settings: MistralChatSettings;
@@ -41,14 +42,30 @@ export class MistralChatLanguageModel implements LanguageModel {
     frequencyPenalty,
     presencePenalty,
     seed,
-  }: Parameters<LanguageModel['doGenerate']>[0]): Parameters<
-    MistralClient['chat']
-  >[0] {
+  }: Parameters<LanguageModel['doGenerate']>[0]): {
+    args: Parameters<MistralClient['chat']>[0];
+    warnings: LanguageModelV1CallWarning[];
+  } {
     const type = mode.type;
     const messages = convertToMistralChatPrompt(prompt);
 
+    const warnings: LanguageModelV1CallWarning[] = [];
+
+    if (frequencyPenalty != null) {
+      warnings.push({
+        type: 'unsupported-setting',
+        setting: 'frequencyPenalty',
+      });
+    }
+
+    if (presencePenalty != null) {
+      warnings.push({
+        type: 'unsupported-setting',
+        setting: 'presencePenalty',
+      });
+    }
+
     // TODO standardize temperature scale
-    // TODO warnings for presencePenalty, frequencyPenalty
     const standardizedSettings = {
       maxTokens,
       temperature,
@@ -59,38 +76,47 @@ export class MistralChatLanguageModel implements LanguageModel {
     switch (type) {
       case 'regular': {
         return {
-          ...this.basePrompt,
-          ...standardizedSettings,
-          messages,
-          // TODO tools
+          args: {
+            ...this.basePrompt,
+            ...standardizedSettings,
+            messages,
+            // TODO tools
+          },
+          warnings,
         };
       }
 
       case 'object-json': {
         return {
-          ...this.basePrompt,
-          ...standardizedSettings,
-          responseFormat: { type: 'json_object' } as ResponseFormat,
-          messages,
+          args: {
+            ...this.basePrompt,
+            ...standardizedSettings,
+            responseFormat: { type: 'json_object' } as ResponseFormat,
+            messages,
+          },
+          warnings,
         };
       }
 
       case 'object-tool': {
         return {
-          ...this.basePrompt,
-          ...standardizedSettings,
-          toolChoice: 'any' as ToolChoice,
-          tools: [
-            {
-              type: 'function',
-              function: {
-                name: mode.tool.name,
-                description: mode.tool.description ?? '',
-                parameters: mode.tool.parameters,
+          args: {
+            ...this.basePrompt,
+            ...standardizedSettings,
+            toolChoice: 'any' as ToolChoice,
+            tools: [
+              {
+                type: 'function',
+                function: {
+                  name: mode.tool.name,
+                  description: mode.tool.description ?? '',
+                  parameters: mode.tool.parameters,
+                },
               },
-            },
-          ],
-          messages,
+            ],
+            messages,
+          },
+          warnings,
         };
       }
 
@@ -109,8 +135,8 @@ export class MistralChatLanguageModel implements LanguageModel {
     options: Parameters<LanguageModel['doGenerate']>[0],
   ): Promise<Awaited<ReturnType<LanguageModel['doGenerate']>>> {
     const client = await this.getClient();
-
-    const clientResponse = await client.chat(this.getArgs(options));
+    const { args, warnings } = this.getArgs(options);
+    const clientResponse = await client.chat(args);
 
     // Note: correct types not supported by MistralClient as of 2024-Feb-28
     const message = clientResponse.choices[0].message as any;
@@ -122,7 +148,7 @@ export class MistralChatLanguageModel implements LanguageModel {
         toolName: toolCall.function.name,
         args: toolCall.function.arguments,
       })),
-      warnings: [], // TODO implement warnings for settings
+      warnings,
     };
   }
 
@@ -130,11 +156,11 @@ export class MistralChatLanguageModel implements LanguageModel {
     options: Parameters<LanguageModel['doStream']>[0],
   ): Promise<Awaited<ReturnType<LanguageModel['doStream']>>> {
     const client = await this.getClient();
-
-    const response = client.chatStream(this.getArgs(options));
+    const { args, warnings } = this.getArgs(options);
+    const response = client.chatStream(args);
 
     return {
-      warnings: [], // TODO implement warnings for settings
+      warnings,
       stream: readableFromAsyncIterable(response).pipeThrough(
         new TransformStream<
           ChatCompletionResponseChunk,

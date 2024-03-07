@@ -220,47 +220,10 @@ type LanguageModelV1 = {
  * some settings might not be supported, which can lead to suboptimal results.
  */
 export type LanguageModelV1CallWarning =
-  | { type: 'unsupported-setting'; setting: string }
+  | { type: 'unsupported-setting'; setting: keyof LanguageModelV1CallSettings }
   | { type: 'other'; message: string };
 
-export type LanguageModelV1CallOptions = {
-  /**
-   * Whether the user provided the input as messages or as
-   * a prompt. This can help guide non-chat models in the
-   * expansion, bc different expansions can be needed for
-   * chat/non-chat use cases.
-   */
-  inputFormat: 'messages' | 'prompt';
-
-  /**
-   * The mode affects the behavior of the language model. It is required to
-   * support provider-independent streaming and generation of structured objects.
-   * The model can take this information and e.g. configure json mode, the correct
-   * low level grammar, etc. It can also be used to optimize the efficiency of the
-   * streaming, e.g. tool-delta stream parts are only needed in the
-   * object-tool mode.
-   */
-  mode:
-    | {
-        // stream text & complete tool calls
-        type: 'regular';
-        tools?: Array<LanguageModelV1FunctionTool>;
-      }
-    | {
-        // object generation with json mode enabled, stream text
-        type: 'object-json';
-      }
-    | {
-        // object generation with grammar enabled, stream text
-        type: 'object-grammar';
-        schema: JsonSchema;
-      }
-    | {
-        // object generation with tool mode enabled, stream tool call deltas
-        type: 'object-tool';
-        tool: LanguageModelV1FunctionTool;
-      };
-
+export type LanguageModelV1CallSettings = {
   /**
    * Maximum number of tokens to generate.
    */
@@ -318,6 +281,45 @@ export type LanguageModelV1CallOptions = {
 
   // note: I have not included n (number of completions to generate), since
   // our API is focussed on a single completion
+};
+
+export type LanguageModelV1CallOptions = LanguageModelV1CallSettings & {
+  /**
+   * Whether the user provided the input as messages or as
+   * a prompt. This can help guide non-chat models in the
+   * expansion, bc different expansions can be needed for
+   * chat/non-chat use cases.
+   */
+  inputFormat: 'messages' | 'prompt';
+
+  /**
+   * The mode affects the behavior of the language model. It is required to
+   * support provider-independent streaming and generation of structured objects.
+   * The model can take this information and e.g. configure json mode, the correct
+   * low level grammar, etc. It can also be used to optimize the efficiency of the
+   * streaming, e.g. tool-delta stream parts are only needed in the
+   * object-tool mode.
+   */
+  mode:
+    | {
+        // stream text & complete tool calls
+        type: 'regular';
+        tools?: Array<LanguageModelV1FunctionTool>;
+      }
+    | {
+        // object generation with json mode enabled, stream text
+        type: 'object-json';
+      }
+    | {
+        // object generation with grammar enabled, stream text
+        type: 'object-grammar';
+        schema: JsonSchema;
+      }
+    | {
+        // object generation with tool mode enabled, stream tool call deltas
+        type: 'object-tool';
+        tool: LanguageModelV1FunctionTool;
+      };
 
   /**
    * A language mode prompt is a standardized prompt type.

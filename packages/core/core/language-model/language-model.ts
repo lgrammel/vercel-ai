@@ -1,4 +1,7 @@
-import { LanguageModelV1CallOptions } from './v1/language-model-v1';
+import {
+  LanguageModelV1CallOptions,
+  LanguageModelV1CallWarning,
+} from './v1/language-model-v1';
 
 export interface LanguageModel {
   /**
@@ -14,22 +17,14 @@ export interface LanguageModel {
   doGenerate(options: LanguageModelV1CallOptions): PromiseLike<{
     text?: string;
     toolCalls?: Array<LanguageModelToolCall>;
-    warnings: LanguageModelCallWarning[];
+    warnings: LanguageModelV1CallWarning[];
   }>;
 
   doStream(options: LanguageModelV1CallOptions): PromiseLike<{
     stream: ReadableStream<LanguageModelStreamPart>;
-    warnings: LanguageModelCallWarning[];
+    warnings: LanguageModelV1CallWarning[];
   }>;
 }
-
-/**
- * Warning from the model provider for this call. The call will proceed, but e.g.
- * some settings might not be supported, which can lead to suboptimal results.
- */
-export type LanguageModelCallWarning =
-  | { type: 'unsupported-setting'; setting: string }
-  | { type: 'other'; message: string };
 
 export type ErrorStreamPart = {
   type: 'error';
