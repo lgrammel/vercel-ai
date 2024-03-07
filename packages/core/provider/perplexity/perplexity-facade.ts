@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { loadApiKey } from '../../core/language-model/load-api-key';
+import { loadApiKey } from '../../core/language-model/util/load-api-key';
 import { createOpenAIClient } from '../openai/create-openai-client';
 import { OpenAIChatLanguageModel } from '../openai/openai-chat-language-model';
 import { PerplexityChatSettings } from './perplexity-chat-settings';

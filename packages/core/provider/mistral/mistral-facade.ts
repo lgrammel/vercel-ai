@@ -2,7 +2,7 @@ import MistralClient from '@mistralai/mistralai';
 import { MistralChatLanguageModel } from './mistral-chat-language-model';
 import { MistralChatSettings } from './mistral-chat-settings';
 import { createMistralClient } from './create-mistral-client';
-import { loadApiKey } from '../../core/language-model/load-api-key';
+import { loadApiKey } from '../../core/language-model/util/load-api-key';
 
 export function chat(
   settings: Omit<MistralChatSettings, 'client'> & {

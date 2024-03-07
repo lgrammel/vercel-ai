@@ -1,5 +1,5 @@
 import { Schema } from './schema';
-import { TypeValidationError } from './type-validation-error';
+import { TypeValidationError } from '../language-model/errors/type-validation-error';
 
 /**
  * Validates the types of an unknown object using a schema and

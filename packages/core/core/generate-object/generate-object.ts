@@ -7,7 +7,7 @@ import { Prompt } from '../prompt/prompt';
 import { safeParseJSON } from '../schema/parse-json';
 import { ZodSchema } from '../schema/zod-schema';
 import { injectJsonSchemaIntoSystem } from './inject-json-schema-into-system';
-import { NoTextGeneratedError } from './no-object-generated-error';
+import { NoTextGeneratedError } from '../language-model/errors/no-object-generated-error';
 
 /**
  * Generate a structured, typed object using a language model.

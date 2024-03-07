@@ -1,4 +1,4 @@
-import { LoadAPIKeyError } from './load-api-key-error';
+import { LoadAPIKeyError } from '../errors/load-api-key-error';
 
 export function loadApiKey({
   apiKey,

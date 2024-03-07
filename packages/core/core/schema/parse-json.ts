@@ -1,8 +1,8 @@
 import SecureJSON from 'secure-json-parse';
-import { JSONParseError } from './json-parse-error';
+import { JSONParseError } from '../language-model/errors/json-parse-error';
 import { Schema } from './schema';
 import { safeValidateTypes, validateTypes } from './validate-types';
-import { TypeValidationError } from './type-validation-error';
+import { TypeValidationError } from '../language-model/errors/type-validation-error';
 
 /**
  * Parses a JSON string into an unknown object.
