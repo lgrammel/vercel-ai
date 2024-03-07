@@ -7,7 +7,7 @@ import { LanguageModel, LanguageModelStreamPart } from '../../core';
 import { readableFromAsyncIterable } from '../../streams/ai-stream';
 import { convertToMistralChatPrompt } from './convert-to-mistral-chat-prompt';
 import { MistralChatSettings } from './mistral-chat-settings';
-import { LanguageModelV1CallWarning } from '../../core/language-model/v1/language-model-v1';
+import { LanguageModelV1CallWarning } from '../../core/language-model/v1/language-model-v1-call-warning';
 
 export class MistralChatLanguageModel implements LanguageModel {
   readonly settings: MistralChatSettings;

@@ -1,7 +1,5 @@
-import {
-  LanguageModelV1CallOptions,
-  LanguageModelV1CallWarning,
-} from './v1/language-model-v1';
+import { LanguageModelV1CallWarning } from './v1/language-model-v1-call-warning';
+import { LanguageModelV1CallOptions } from './v1/language-model-v1-call-options';
 
 export interface LanguageModel {
   /**
